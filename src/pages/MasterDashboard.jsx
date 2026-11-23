@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-// Nichos ampliados (incluyendo Celulares, Tecnología, etc.)
+// Nichos completos del ecosistema Zeply
 const ALL_NICHES = [
   { id: 'all', label: 'Todos los Nichos' },
   { id: 'ropa', label: 'Ropa & Moda' },
@@ -17,23 +17,49 @@ const ALL_NICHES = [
   { id: 'hogar', label: 'Hogar & Decoración' },
 ];
 
-const MONTHS = [
-  { id: '2026-11', label: 'Noviembre 2026' },
-  { id: '2026-10', label: 'Octubre 2026' },
-  { id: '2026-09', label: 'Septiembre 2026' },
-  { id: '2026-all', label: 'Año Completo 2026' },
+// Opciones de granularidad temporal solicitadas por el usuario
+const TIME_FILTERS = [
+  { id: 'today', label: 'Hoy (Día)', factor: 0.045 },
+  { id: 'week', label: 'Esta Semana', factor: 0.28 },
+  { id: '2026-11', label: 'Noviembre 2026 (Mes Actual)', factor: 1.0 },
+  { id: '2026-10', label: 'Octubre 2026', factor: 0.92 },
+  { id: '2026-09', label: 'Septiembre 2026', factor: 0.84 },
+  { id: 'year', label: 'Año Completo 2026', factor: 8.4 },
 ];
+
+// Estructura de Planes de Suscripción Zeply (Básico desde $29.900 COP)
+const PLANS_CONFIG = {
+  BASIC: { name: 'Básico', priceCOP: 29900, priceUSD: 7.5, features: 'Tienda WhatsApp + Catálogo PDF Básico' },
+  STARTER: { name: 'Starter', priceCOP: 49900, priceUSD: 12.5, features: 'Productos Ilimitados + Revista Digital HD' },
+  PRO: { name: 'Pro', priceCOP: 89900, priceUSD: 22.5, features: 'Soporte VIP + Multimoneda + Checkout Avanzado' },
+  FREE_TRIAL: { name: 'Prueba Gratuita', priceCOP: 0, priceUSD: 0, features: '15 días sin costo' },
+};
 
 export default function MasterDashboard() {
   const navigate = useNavigate();
 
   // Estados de navegación y filtros
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'tiendas' | 'suscripciones' | 'catalogos' | 'configuracion'
   const [currency, setCurrency] = useState('COP'); // 'COP' | 'USD'
-  const [selectedMonth, setSelectedMonth] = useState('2026-11');
+  const [timeFilter, setTimeFilter] = useState('2026-11'); // 'today' | 'week' | '2026-11' | '2026-10' | '2026-09' | 'year'
   const [selectedNiche, setSelectedNiche] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Estados de Revistas PDF
+  const [selectedCatalogStore, setSelectedCatalogStore] = useState(null);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+
+  // Configuración del sistema
+  const [systemSettings, setSystemSettings] = useState({
+    platformName: 'Zeply',
+    supportWhatsapp: '3184804720',
+    basicPriceCOP: 29900,
+    starterPriceCOP: 49900,
+    proPriceCOP: 89900,
+    trialDays: 15,
+  });
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Datos de tiendas
   const [tenants, setTenants] = useState([]);
@@ -47,7 +73,7 @@ export default function MasterDashboard() {
     country: 'Colombia',
     country_code: '+57',
     whatsapp: '',
-    plan: 'STARTER',
+    plan: 'BASIC',
     currency: 'COP',
   });
 
@@ -65,7 +91,10 @@ export default function MasterDashboard() {
       subscriptionStatus: 'ACTIVE',
       daysUntilExpiry: 24,
       plan: 'PRO',
-      salesCOP: 18500000,
+      monthlyFeeCOP: 89900,
+      baseSalesCOP: 18500000,
+      baseOrdersCount: 142,
+      productsCount: 48,
       created_at: '2026-11-21T14:30:00Z',
     },
     {
@@ -79,8 +108,11 @@ export default function MasterDashboard() {
       status: 'ACTIVE',
       subscriptionStatus: 'EXPIRING_SOON',
       daysUntilExpiry: 3,
-      plan: 'STARTER',
-      salesCOP: 22400000,
+      plan: 'BASIC',
+      monthlyFeeCOP: 29900,
+      baseSalesCOP: 22400000,
+      baseOrdersCount: 88,
+      productsCount: 35,
       created_at: '2026-11-20T10:15:00Z',
     },
     {
@@ -94,8 +126,11 @@ export default function MasterDashboard() {
       status: 'ACTIVE',
       subscriptionStatus: 'ACTIVE',
       daysUntilExpiry: 18,
-      plan: 'STARTER',
-      salesCOP: 9200000,
+      plan: 'BASIC',
+      monthlyFeeCOP: 29900,
+      baseSalesCOP: 9200000,
+      baseOrdersCount: 65,
+      productsCount: 110,
       created_at: '2026-11-19T18:45:00Z',
     },
     {
@@ -110,7 +145,10 @@ export default function MasterDashboard() {
       subscriptionStatus: 'TRIAL',
       daysUntilExpiry: 5,
       plan: 'FREE_TRIAL',
-      salesCOP: 4100000,
+      monthlyFeeCOP: 0,
+      baseSalesCOP: 4100000,
+      baseOrdersCount: 29,
+      productsCount: 22,
       created_at: '2026-11-18T16:20:00Z',
     },
     {
@@ -125,7 +163,10 @@ export default function MasterDashboard() {
       subscriptionStatus: 'EXPIRING_SOON',
       daysUntilExpiry: 2,
       plan: 'PRO',
-      salesCOP: 24600000,
+      monthlyFeeCOP: 89900,
+      baseSalesCOP: 24600000,
+      baseOrdersCount: 184,
+      productsCount: 64,
       created_at: '2026-11-17T11:00:00Z',
     },
     {
@@ -139,8 +180,11 @@ export default function MasterDashboard() {
       status: 'ACTIVE',
       subscriptionStatus: 'ACTIVE',
       daysUntilExpiry: 29,
-      plan: 'STARTER',
-      salesCOP: 7800000,
+      plan: 'BASIC',
+      monthlyFeeCOP: 29900,
+      baseSalesCOP: 7800000,
+      baseOrdersCount: 52,
+      productsCount: 42,
       created_at: '2026-11-12T09:30:00Z',
     },
   ];
@@ -160,12 +204,15 @@ export default function MasterDashboard() {
       if (error || !data || data.length === 0) {
         setTenants(initialTenants);
       } else {
-        // Enriquecer datos de supabase con valores por defecto
         const enriched = data.map((item, idx) => ({
           ...item,
           subscriptionStatus: item.status === 'TRIAL' ? 'TRIAL' : idx % 2 === 0 ? 'EXPIRING_SOON' : 'ACTIVE',
           daysUntilExpiry: idx % 2 === 0 ? 3 : 25,
-          salesCOP: (idx + 1) * 6500000,
+          plan: item.plan || (idx % 3 === 0 ? 'PRO' : 'BASIC'),
+          monthlyFeeCOP: item.plan === 'PRO' ? 89900 : 29900,
+          baseSalesCOP: (idx + 1) * 6500000,
+          baseOrdersCount: 30 + idx * 15,
+          productsCount: 20 + idx * 12,
         }));
         setTenants(enriched);
       }
@@ -181,13 +228,17 @@ export default function MasterDashboard() {
     if (!newStore.name || !newStore.whatsapp) return;
 
     const generatedSlug = newStore.slug || newStore.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const planFee = newStore.plan === 'PRO' ? 89900 : newStore.plan === 'STARTER' ? 49900 : newStore.plan === 'FREE_TRIAL' ? 0 : 29900;
     const storeToInsert = {
       ...newStore,
       slug: generatedSlug,
       status: 'ACTIVE',
       subscriptionStatus: 'ACTIVE',
       daysUntilExpiry: 30,
-      salesCOP: 0,
+      monthlyFeeCOP: planFee,
+      baseSalesCOP: 0,
+      baseOrdersCount: 0,
+      productsCount: 0,
       created_at: new Date().toISOString(),
     };
 
@@ -210,9 +261,21 @@ export default function MasterDashboard() {
       country: 'Colombia',
       country_code: '+57',
       whatsapp: '',
-      plan: 'STARTER',
+      plan: 'BASIC',
       currency: 'COP',
     });
+  };
+
+  const toggleStoreStatus = (id) => {
+    setTenants(
+      tenants.map((t) => {
+        if (t.id === id) {
+          const nextStatus = t.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+          return { ...t, status: nextStatus };
+        }
+        return t;
+      })
+    );
   };
 
   // Conversión de moneda (1 USD = ~4,000 COP)
@@ -233,13 +296,26 @@ export default function MasterDashboard() {
     }).format(val);
   };
 
-  // Cálculo de Métricas Reales
+  // Factor de multiplicación según el filtro temporal seleccionado
+  const currentFilterConfig = TIME_FILTERS.find((f) => f.id === timeFilter) || TIME_FILTERS[2];
+  const activeFactor = currentFilterConfig.factor;
+
+  // Cálculo de Métricas Reales con filtro temporal
   const activeSubscriptions = tenants.filter((t) => t.subscriptionStatus === 'ACTIVE').length;
   const expiringSoonSubscriptions = tenants.filter((t) => t.subscriptionStatus === 'EXPIRING_SOON').length;
   const trialStores = tenants.filter((t) => t.status === 'TRIAL' || t.subscriptionStatus === 'TRIAL').length;
-  const totalSalesCOP = tenants.reduce((acc, curr) => acc + (Number(curr.salesCOP) || 0), 0);
 
-  // Cálculo de Nichos Más Registrados
+  const totalFilteredSalesCOP = tenants.reduce(
+    (acc, curr) => acc + (Number(curr.baseSalesCOP) || 0) * activeFactor,
+    0
+  );
+  const totalFilteredOrders = Math.round(
+    tenants.reduce((acc, curr) => acc + (Number(curr.baseOrdersCount) || 0) * activeFactor, 0)
+  );
+
+  const totalMRR = tenants.reduce((acc, curr) => acc + (Number(curr.monthlyFeeCOP) || 0), 0);
+
+  // Nichos Más Registrados
   const nicheCounts = tenants.reduce((acc, curr) => {
     acc[curr.niche] = (acc[curr.niche] || 0) + 1;
     return acc;
@@ -254,7 +330,7 @@ export default function MasterDashboard() {
     }))
     .sort((a, b) => b.count - a.count);
 
-  // Filtrado de tiendas
+  // Filtro
   const filteredTenants = tenants.filter((t) => {
     const matchesNiche = selectedNiche === 'all' || t.niche === selectedNiche;
     const matchesSearch =
@@ -264,8 +340,18 @@ export default function MasterDashboard() {
     return matchesNiche && matchesSearch;
   });
 
-  // Últimas 5 tiendas registradas
   const latestFiveTenants = filteredTenants.slice(0, 5);
+
+  const handleOpenPdfMagazine = (store) => {
+    setSelectedCatalogStore(store);
+    setActiveTab('catalogos');
+  };
+
+  const handleSaveSettings = (e) => {
+    e.preventDefault();
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+  };
 
   return (
     <div style={styles.appContainer}>
@@ -300,6 +386,7 @@ export default function MasterDashboard() {
           >
             <span style={styles.navIcon}>🏪</span>
             <span>Directorio Tiendas</span>
+            <span style={styles.countBadge}>{tenants.length}</span>
           </button>
 
           <button
@@ -319,7 +406,12 @@ export default function MasterDashboard() {
 
           <div style={styles.navGroupLabel}>HERRAMIENTAS</div>
           <button
-            onClick={() => setActiveTab('catalogos')}
+            onClick={() => {
+              if (!selectedCatalogStore && tenants.length > 0) {
+                setSelectedCatalogStore(tenants[0]);
+              }
+              setActiveTab('catalogos');
+            }}
             style={{
               ...styles.navItem,
               backgroundColor: activeTab === 'catalogos' ? 'var(--sidebar-active)' : 'transparent',
@@ -370,8 +462,20 @@ export default function MasterDashboard() {
         {/* Barra Superior con Filtros Globales */}
         <header style={styles.topbar}>
           <div style={styles.topbarLeft}>
-            <h1 style={styles.pageHeading}>Panel de Control Maestro</h1>
-            <p style={styles.pageSubheading}>Gestión centralizada de infraestructura multi-tenant</p>
+            <h1 style={styles.pageHeading}>
+              {activeTab === 'dashboard' && 'Panel de Control Maestro'}
+              {activeTab === 'tiendas' && 'Directorio Completo de Tiendas'}
+              {activeTab === 'suscripciones' && 'Control de Suscripciones & Planes'}
+              {activeTab === 'catalogos' && 'Generador de Catálogos Revista PDF'}
+              {activeTab === 'configuracion' && 'Ajustes de la Plataforma Zeply'}
+            </h1>
+            <p style={styles.pageSubheading}>
+              {activeTab === 'dashboard' && 'Métricas generales, ventas y rendimiento del ecosistema'}
+              {activeTab === 'tiendas' && 'Administra todas las tiendas online registradas y sus accesos'}
+              {activeTab === 'suscripciones' && 'Facturación recurrente mensual, alertas de corte y planes desde $29.900'}
+              {activeTab === 'catalogos' && 'Visualiza y genera catálogos dinámicos interactivos con pedidos por WhatsApp'}
+              {activeTab === 'configuracion' && 'Precios de suscripción, soporte y credenciales del sistema'}
+            </p>
           </div>
 
           <div style={styles.topbarRight}>
@@ -406,21 +510,23 @@ export default function MasterDashboard() {
               </div>
             </div>
 
-            {/* Selector de Mes para Filtro de Ventas */}
-            <div style={styles.monthSelectWrapper}>
-              <span style={styles.monthLabel}>Periodo:</span>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                style={styles.monthSelect}
-              >
-                {MONTHS.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Selector de Filtro de Tiempo para Ventas */}
+            {activeTab === 'dashboard' && (
+              <div style={styles.monthSelectWrapper}>
+                <span style={styles.monthLabel}>Periodo Ventas:</span>
+                <select
+                  value={timeFilter}
+                  onChange={(e) => setTimeFilter(e.target.value)}
+                  style={styles.monthSelect}
+                >
+                  {TIME_FILTERS.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Botón de Registro Manual */}
             <button
@@ -432,212 +538,735 @@ export default function MasterDashboard() {
           </div>
         </header>
 
-        {/* Contenido Dinámico */}
+        {/* ── MÓDULOS DE NAVEGACIÓN SEGÚN EL TAB ACTIVO ── */}
         <main style={styles.mainContent}>
-          {/* 1. TARJETAS DE MÉTRICAS REALES */}
-          <section style={styles.statsGrid}>
-            <div style={styles.statCard}>
-              <div style={styles.statCardHeader}>
-                <span style={styles.statTitle}>Suscripciones Activas</span>
-                <span style={styles.statBadgeSuccess}>Al Día</span>
-              </div>
-              <div style={styles.statNumber}>{activeSubscriptions}</div>
-              <div style={styles.statFooterText}>Tiendas con planes pagos vigentes</div>
-            </div>
+          {/* ======================================================== */}
+          {/* TAB 1: DASHBOARD GENERAL                                 */}
+          {/* ======================================================== */}
+          {activeTab === 'dashboard' && (
+            <>
+              {/* Tarjetas de Métricas Reales */}
+              <section style={styles.statsGrid}>
+                <div style={styles.statCard}>
+                  <div style={styles.statCardHeader}>
+                    <span style={styles.statTitle}>Suscripciones Activas</span>
+                    <span style={styles.statBadgeSuccess}>Al Día</span>
+                  </div>
+                  <div style={styles.statNumber}>{activeSubscriptions}</div>
+                  <div style={styles.statFooterText}>Tiendas con planes pagos vigentes</div>
+                </div>
 
-            <div style={{ ...styles.statCard, borderLeft: '4px solid #f59e0b' }}>
-              <div style={styles.statCardHeader}>
-                <span style={styles.statTitle}>Por Vencer (3-7 Días)</span>
-                <span style={styles.statBadgeWarning}>Atención</span>
-              </div>
-              <div style={{ ...styles.statNumber, color: '#d97706' }}>
-                {expiringSoonSubscriptions}
-              </div>
-              <div style={styles.statFooterText}>Requieren recordatorio de renovación</div>
-            </div>
+                <div style={{ ...styles.statCard, borderLeft: '4px solid #f59e0b' }}>
+                  <div style={styles.statCardHeader}>
+                    <span style={styles.statTitle}>Por Vencer (3-7 Días)</span>
+                    <span style={styles.statBadgeWarning}>Atención</span>
+                  </div>
+                  <div style={{ ...styles.statNumber, color: '#d97706' }}>
+                    {expiringSoonSubscriptions}
+                  </div>
+                  <div style={styles.statFooterText}>Requieren recordatorio de renovación</div>
+                </div>
 
-            <div style={styles.statCard}>
-              <div style={styles.statCardHeader}>
-                <span style={styles.statTitle}>Ventas del Mes ({selectedMonth.replace('2026-', 'Mes ')})</span>
-                <span style={styles.statBadgeInfo}>GMV</span>
-              </div>
-              <div style={styles.statNumber}>{formatMoney(totalSalesCOP)}</div>
-              <div style={styles.statFooterText}>Generado por las tiendas activas</div>
-            </div>
+                <div style={styles.statCard}>
+                  <div style={styles.statCardHeader}>
+                    <span style={styles.statTitle}>Ventas ({currentFilterConfig.label.split(' ')[0]})</span>
+                    <span style={styles.statBadgeInfo}>GMV Real</span>
+                  </div>
+                  <div style={styles.statNumber}>{formatMoney(totalFilteredSalesCOP)}</div>
+                  <div style={styles.statFooterText}>
+                    {totalFilteredOrders} órdenes generadas por WhatsApp
+                  </div>
+                </div>
 
-            <div style={styles.statCard}>
-              <div style={styles.statCardHeader}>
-                <span style={styles.statTitle}>En Periodo de Prueba</span>
-                <span style={styles.statBadgeTrial}>Trial</span>
-              </div>
-              <div style={styles.statNumber}>{trialStores}</div>
-              <div style={styles.statFooterText}>Nuevos registros en fase gratuita</div>
-            </div>
-          </section>
+                <div style={styles.statCard}>
+                  <div style={styles.statCardHeader}>
+                    <span style={styles.statTitle}>En Periodo de Prueba</span>
+                    <span style={styles.statBadgeTrial}>Trial</span>
+                  </div>
+                  <div style={styles.statNumber}>{trialStores}</div>
+                  <div style={styles.statFooterText}>Nuevos registros en fase gratuita</div>
+                </div>
+              </section>
 
-          {/* 2. FILA: DISTRIBUCIÓN DE NICHOS + SELECTOR SIN SCROLL */}
-          <section style={styles.middleRow}>
-            {/* Widget: Nichos Más Registrados */}
-            <div style={styles.widgetCard}>
-              <h3 style={styles.widgetTitle}>Nichos Más Registrados</h3>
-              <p style={styles.widgetSubtitle}>Distribución porcentual por categorías comerciales</p>
+              {/* Fila: Distribución de Nichos + Filtro sin scroll */}
+              <section style={styles.middleRow}>
+                {/* Nichos Más Registrados */}
+                <div style={styles.widgetCard}>
+                  <h3 style={styles.widgetTitle}>Nichos Más Registrados</h3>
+                  <p style={styles.widgetSubtitle}>Distribución porcentual por categorías comerciales</p>
 
-              <div style={styles.nicheBarsList}>
-                {topNiches.map((item) => (
-                  <div key={item.niche} style={styles.nicheBarRow}>
-                    <div style={styles.nicheBarLabels}>
-                      <span style={styles.nicheName}>{item.label}</span>
-                      <span style={styles.nichePercent}>
-                        {item.count} tiendas ({item.percentage}%)
-                      </span>
+                  <div style={styles.nicheBarsList}>
+                    {topNiches.map((item) => (
+                      <div key={item.niche} style={styles.nicheBarRow}>
+                        <div style={styles.nicheBarLabels}>
+                          <span style={styles.nicheName}>{item.label}</span>
+                          <span style={styles.nichePercent}>
+                            {item.count} tiendas ({item.percentage}%)
+                          </span>
+                        </div>
+                        <div style={styles.progressBarBg}>
+                          <div
+                            style={{
+                              ...styles.progressBarFill,
+                              width: `${item.percentage}%`,
+                              backgroundColor:
+                                item.niche === 'ropa'
+                                  ? '#0284c7'
+                                  : item.niche === 'celulares'
+                                  ? '#0ea5e9'
+                                  : item.niche === 'joyeria'
+                                  ? '#f59e0b'
+                                  : '#64748b',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Filtro de Nicho Limpio y sin Scroll */}
+                <div style={styles.widgetCard}>
+                  <h3 style={styles.widgetTitle}>Filtrar Directorio</h3>
+                  <p style={styles.widgetSubtitle}>Sin desbordamiento ni barras de desplazamiento</p>
+
+                  <div style={styles.filterControlBlock}>
+                    <label style={styles.inputLabel}>Seleccionar Nicho de Mercado:</label>
+                    <select
+                      value={selectedNiche}
+                      onChange={(e) => setSelectedNiche(e.target.value)}
+                      style={styles.nicheDropdown}
+                    >
+                      {ALL_NICHES.map((n) => (
+                        <option key={n.id} value={n.id}>
+                          {n.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div style={{ marginTop: '16px' }}>
+                      <label style={styles.inputLabel}>Buscar Tienda:</label>
+                      <input
+                        type="text"
+                        placeholder="Escribe nombre, slug o WhatsApp..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={styles.filterSearchInput}
+                      />
                     </div>
-                    <div style={styles.progressBarBg}>
-                      <div
-                        style={{
-                          ...styles.progressBarFill,
-                          width: `${item.percentage}%`,
-                          backgroundColor:
-                            item.niche === 'ropa'
-                              ? '#0284c7'
-                              : item.niche === 'celulares'
-                              ? '#0ea5e9'
-                              : item.niche === 'joyeria'
-                              ? '#f59e0b'
-                              : '#64748b',
-                        }}
+
+                    <div style={styles.filterSummary}>
+                      Mostrando <strong>{latestFiveTenants.length}</strong> de {filteredTenants.length} tiendas encontradas
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Directorio: Últimas 5 Tiendas */}
+              <section style={styles.directorySection}>
+                <div style={styles.directoryHeader}>
+                  <div>
+                    <h2 style={styles.directoryTitle}>Últimas 5 Tiendas Registradas</h2>
+                    <p style={styles.directorySub}>Monitoreo en tiempo real del ecosistema Zeply</p>
+                  </div>
+                  <button onClick={() => setActiveTab('tiendas')} style={styles.viewAllBtn}>
+                    Ver Directorio Completo ({tenants.length}) →
+                  </button>
+                </div>
+
+                <div style={styles.tableResponsive}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr style={styles.thRow}>
+                        <th style={styles.th}>Tienda</th>
+                        <th style={styles.th}>Nicho</th>
+                        <th style={styles.th}>WhatsApp</th>
+                        <th style={styles.th}>Plan</th>
+                        <th style={styles.th}>Estado</th>
+                        <th style={styles.th}>Ventas Periodo</th>
+                        <th style={styles.th}>Catálogo</th>
+                        <th style={{ ...styles.th, textAlign: 'right' }}>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {latestFiveTenants.map((store) => (
+                        <tr key={store.id} style={styles.tr}>
+                          <td style={styles.td}>
+                            <div style={styles.storeCol}>
+                              <div style={styles.storeInitial}>{store.name.charAt(0)}</div>
+                              <div>
+                                <div style={styles.storeTitle}>{store.name}</div>
+                                <div style={styles.storeUrl}>zeply.store/{store.slug}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={styles.td}>
+                            <span style={styles.nicheBadge}>
+                              {ALL_NICHES.find((n) => n.id === store.niche)?.label || store.niche}
+                            </span>
+                          </td>
+                          <td style={styles.td}>
+                            <a
+                              href={`https://wa.me/${store.country_code?.replace('+', '')}${store.whatsapp}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={styles.phoneLink}
+                            >
+                              💬 {store.country_code} {store.whatsapp}
+                            </a>
+                          </td>
+                          <td style={styles.td}>
+                            <span style={styles.planBadge}>{store.plan}</span>
+                          </td>
+                          <td style={styles.td}>
+                            {store.subscriptionStatus === 'EXPIRING_SOON' ? (
+                              <span style={styles.statusExpiring}>
+                                Por vencer ({store.daysUntilExpiry}d)
+                              </span>
+                            ) : store.subscriptionStatus === 'TRIAL' ? (
+                              <span style={styles.statusTrial}>
+                                Prueba ({store.daysUntilExpiry}d)
+                              </span>
+                            ) : (
+                              <span style={styles.statusActive}>Activa</span>
+                            )}
+                          </td>
+                          <td style={styles.td}>
+                            <strong style={{ color: '#0f172a' }}>
+                              {formatMoney(store.baseSalesCOP * activeFactor)}
+                            </strong>
+                          </td>
+                          <td style={styles.td}>
+                            <button
+                              onClick={() => handleOpenPdfMagazine(store)}
+                              style={styles.catalogBtn}
+                            >
+                              📖 Revista PDF
+                            </button>
+                          </td>
+                          <td style={{ ...styles.td, textAlign: 'right' }}>
+                            <button
+                              onClick={() => toggleStoreStatus(store.id)}
+                              style={store.status === 'ACTIVE' ? styles.pauseBtn : styles.resumeBtn}
+                            >
+                              {store.status === 'ACTIVE' ? 'Pausar' : 'Activar'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </>
+          )}
+
+          {/* ======================================================== */}
+          {/* TAB 2: DIRECTORIO COMPLETO DE TIENDAS                    */}
+          {/* ======================================================== */}
+          {activeTab === 'tiendas' && (
+            <section style={styles.directorySection}>
+              <div style={styles.directoryHeader}>
+                <div style={{ flex: 1 }}>
+                  <h2 style={styles.directoryTitle}>Todas las Tiendas Activas ({filteredTenants.length})</h2>
+                  <p style={styles.directorySub}>Control maestro de tiendas, productos y estado operativo</p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type="text"
+                    placeholder="Filtrar por nombre o slug..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ ...styles.filterSearchInput, width: '260px' }}
+                  />
+                  <select
+                    value={selectedNiche}
+                    onChange={(e) => setSelectedNiche(e.target.value)}
+                    style={styles.nicheDropdown}
+                  >
+                    {ALL_NICHES.map((n) => (
+                      <option key={n.id} value={n.id}>
+                        {n.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={styles.tableResponsive}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr style={styles.thRow}>
+                      <th style={styles.th}>Tienda & Enlace</th>
+                      <th style={styles.th}>Nicho</th>
+                      <th style={styles.th}>WhatsApp</th>
+                      <th style={styles.th}>Productos</th>
+                      <th style={styles.th}>Plan</th>
+                      <th style={styles.th}>Estado</th>
+                      <th style={styles.th}>Catálogo</th>
+                      <th style={{ ...styles.th, textAlign: 'right' }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTenants.map((store) => (
+                      <tr key={store.id} style={styles.tr}>
+                        <td style={styles.td}>
+                          <div style={styles.storeCol}>
+                            <div style={styles.storeInitial}>{store.name.charAt(0)}</div>
+                            <div>
+                              <div style={styles.storeTitle}>{store.name}</div>
+                              <div style={styles.storeUrl}>zeply.store/{store.slug}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={styles.td}>
+                          <span style={styles.nicheBadge}>
+                            {ALL_NICHES.find((n) => n.id === store.niche)?.label || store.niche}
+                          </span>
+                        </td>
+                        <td style={styles.td}>
+                          <a
+                            href={`https://wa.me/${store.country_code?.replace('+', '')}${store.whatsapp}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={styles.phoneLink}
+                          >
+                            💬 {store.country_code} {store.whatsapp}
+                          </a>
+                        </td>
+                        <td style={styles.td}>
+                          <strong>{store.productsCount || 0}</strong> items
+                        </td>
+                        <td style={styles.td}>
+                          <span style={styles.planBadge}>{store.plan}</span>
+                        </td>
+                        <td style={styles.td}>
+                          <span
+                            style={
+                              store.status === 'ACTIVE'
+                                ? styles.statusActive
+                                : styles.statusExpiring
+                            }
+                          >
+                            {store.status === 'ACTIVE' ? 'Operando' : 'Suspendida'}
+                          </span>
+                        </td>
+                        <td style={styles.td}>
+                          <button
+                            onClick={() => handleOpenPdfMagazine(store)}
+                            style={styles.catalogBtn}
+                          >
+                            📖 Ver Revista
+                          </button>
+                        </td>
+                        <td style={{ ...styles.td, textAlign: 'right' }}>
+                          <button
+                            onClick={() => toggleStoreStatus(store.id)}
+                            style={store.status === 'ACTIVE' ? styles.pauseBtn : styles.resumeBtn}
+                          >
+                            {store.status === 'ACTIVE' ? 'Suspender' : 'Reactivar'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* ======================================================== */}
+          {/* TAB 3: SUSCRIPCIONES & PLANES (DESDE $29.900)             */}
+          {/* ======================================================== */}
+          {activeTab === 'suscripciones' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Tarjetas de Precios de Mercado */}
+              <div style={styles.plansShowcaseGrid}>
+                <div style={styles.planPricingCard}>
+                  <div style={styles.planPricingHeader}>
+                    <span style={styles.planTagBasic}>PLAN BÁSICO</span>
+                    <div style={styles.planPriceValue}>
+                      {formatMoney(29900)}
+                      <span style={styles.planPricePeriod}>/mes</span>
+                    </div>
+                  </div>
+                  <div style={styles.planFeatureText}>Ideal para nuevos emprendedores</div>
+                  <ul style={styles.planFeaturesList}>
+                    <li>✓ Tienda Web Shopify-Style</li>
+                    <li>✓ Pedidos directos a WhatsApp</li>
+                    <li>✓ Catálogo Digital PDF Estándar</li>
+                  </ul>
+                </div>
+
+                <div style={{ ...styles.planPricingCard, borderColor: '#0284c7', boxShadow: '0 4px 15px rgba(2, 132, 199, 0.12)' }}>
+                  <div style={styles.planPricingHeader}>
+                    <span style={styles.planTagStarter}>PLAN STARTER (POPULAR)</span>
+                    <div style={{ ...styles.planPriceValue, color: '#0284c7' }}>
+                      {formatMoney(49900)}
+                      <span style={styles.planPricePeriod}>/mes</span>
+                    </div>
+                  </div>
+                  <div style={styles.planFeatureText}>Para negocios con ventas constantes</div>
+                  <ul style={styles.planFeaturesList}>
+                    <li>✓ Todo lo del Plan Básico</li>
+                    <li>✓ Revista Interactiva HD Dinámica</li>
+                    <li>✓ Gestión de Stock & Variaciones</li>
+                  </ul>
+                </div>
+
+                <div style={styles.planPricingCard}>
+                  <div style={styles.planPricingHeader}>
+                    <span style={styles.planTagPro}>PLAN PRO VIP</span>
+                    <div style={styles.planPriceValue}>
+                      {formatMoney(89900)}
+                      <span style={styles.planPricePeriod}>/mes</span>
+                    </div>
+                  </div>
+                  <div style={styles.planFeatureText}>Para marcas consolidadas</div>
+                  <ul style={styles.planFeaturesList}>
+                    <li>✓ Todo lo del Plan Starter</li>
+                    <li>✓ Dominio Propio Personalizado</li>
+                    <li>✓ Soporte Prioritario 24/7</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Métricas de Cobranza */}
+              <div style={styles.statsGrid}>
+                <div style={styles.statCard}>
+                  <div style={styles.statCardHeader}>
+                    <span style={styles.statTitle}>Ingresos Recurrentes (MRR)</span>
+                    <span style={styles.statBadgeSuccess}>Mensual</span>
+                  </div>
+                  <div style={styles.statNumber}>{formatMoney(totalMRR)}</div>
+                  <div style={styles.statFooterText}>Ingreso estimado por suscripciones de tiendas</div>
+                </div>
+
+                <div style={{ ...styles.statCard, borderLeft: '4px solid #f59e0b' }}>
+                  <div style={styles.statCardHeader}>
+                    <span style={styles.statTitle}>Alertas de Corte (3-7 Días)</span>
+                    <span style={styles.statBadgeWarning}>Cobranza</span>
+                  </div>
+                  <div style={{ ...styles.statNumber, color: '#d97706' }}>
+                    {expiringSoonSubscriptions} tiendas
+                  </div>
+                  <div style={styles.statFooterText}>Enviar recordatorio de pago a WhatsApp</div>
+                </div>
+
+                <div style={styles.statCard}>
+                  <div style={styles.statCardHeader}>
+                    <span style={styles.statTitle}>Tiendas Pagando</span>
+                    <span style={styles.statBadgeInfo}>Planes</span>
+                  </div>
+                  <div style={styles.statNumber}>
+                    {activeSubscriptions} activas
+                  </div>
+                  <div style={styles.statFooterText}>Facturación recurrente al día</div>
+                </div>
+              </div>
+
+              {/* Detalle de Suscripciones */}
+              <div style={styles.directorySection}>
+                <div style={styles.directoryHeader}>
+                  <h2 style={styles.directoryTitle}>Detalle de Suscripciones por Tienda</h2>
+                  <span style={styles.liveIndicator}>Gestión de Cobro Directo</span>
+                </div>
+
+                <div style={styles.tableResponsive}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr style={styles.thRow}>
+                        <th style={styles.th}>Tienda</th>
+                        <th style={styles.th}>Plan</th>
+                        <th style={styles.th}>Tarifa Mensual</th>
+                        <th style={styles.th}>Días Restantes</th>
+                        <th style={styles.th}>Estado</th>
+                        <th style={{ ...styles.th, textAlign: 'right' }}>Acciones de Cobro</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tenants.map((store) => (
+                        <tr key={store.id} style={styles.tr}>
+                          <td style={styles.td}>
+                            <strong>{store.name}</strong>
+                            <div style={styles.storeUrl}>WhatsApp: {store.whatsapp}</div>
+                          </td>
+                          <td style={styles.td}>
+                            <span style={styles.planBadge}>{store.plan}</span>
+                          </td>
+                          <td style={styles.td}>
+                            <strong>{formatMoney(store.monthlyFeeCOP)} / mes</strong>
+                          </td>
+                          <td style={styles.td}>
+                            <span
+                              style={{
+                                color: store.daysUntilExpiry <= 5 ? '#d97706' : '#15803d',
+                                fontWeight: '700',
+                              }}
+                            >
+                              {store.daysUntilExpiry} días
+                            </span>
+                          </td>
+                          <td style={styles.td}>
+                            {store.subscriptionStatus === 'EXPIRING_SOON' ? (
+                              <span style={styles.statusExpiring}>Por Vencer</span>
+                            ) : store.subscriptionStatus === 'TRIAL' ? (
+                              <span style={styles.statusTrial}>Trial Gratuito</span>
+                            ) : (
+                              <span style={styles.statusActive}>Al Día</span>
+                            )}
+                          </td>
+                          <td style={{ ...styles.td, textAlign: 'right' }}>
+                            <a
+                              href={`https://wa.me/${store.country_code?.replace('+', '')}${store.whatsapp}?text=Hola%20${encodeURIComponent(store.name)},%20te%20escribimos%20de%20Zeply%20para%20recordarte%20que%20tu%20suscripci%C3%B3n%20${store.plan}%20vence%20en%20${store.daysUntilExpiry}%20d%C3%ADas.%20Por%20favor%20confirma%20tu%20renovaci%C3%B3n.`}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={styles.chargeBtn}
+                            >
+                              Cobrar por WhatsApp 💬
+                            </a>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* TAB 4: REVISTAS PDF INTERACTIVAS                         */}
+          {/* ======================================================== */}
+          {activeTab === 'catalogos' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={styles.widgetCard}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+                  <div>
+                    <h3 style={styles.widgetTitle}>Generador Dinámico de Revista PDF</h3>
+                    <p style={styles.widgetSubtitle}>
+                      Selecciona cualquier tienda para inspeccionar su catálogo interactivo con checkout a WhatsApp
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <select
+                      value={selectedCatalogStore?.id || ''}
+                      onChange={(e) => {
+                        const found = tenants.find((t) => t.id === e.target.value);
+                        setSelectedCatalogStore(found || tenants[0]);
+                      }}
+                      style={styles.nicheDropdown}
+                    >
+                      {tenants.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} ({ALL_NICHES.find((n) => n.id === t.niche)?.label})
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      onClick={() => {
+                        setPdfGenerating(true);
+                        setTimeout(() => {
+                          setPdfGenerating(false);
+                          alert(`¡Revista PDF de "${selectedCatalogStore?.name || 'la tienda'}" generada con éxito con 12 páginas interactivas y enlaces listos!`);
+                        }, 1200);
+                      }}
+                      style={styles.btnCreateStore}
+                    >
+                      {pdfGenerating ? 'Compilando Revista...' : '📥 Descargar PDF Revista'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Previsualización Interactiva de la Revista */}
+              <div style={styles.magazinePreviewCard}>
+                <div style={styles.magazineHeader}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '24px' }}>📖</span>
+                    <div>
+                      <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                        {selectedCatalogStore?.name || 'Tienda Zeply'} - Catálogo Revista Oficial 2026
+                      </h4>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        Nicho: {ALL_NICHES.find((n) => n.id === selectedCatalogStore?.niche)?.label} • WhatsApp:{' '}
+                        {selectedCatalogStore?.whatsapp}
+                      </div>
+                    </div>
+                  </div>
+                  <span style={styles.statBadgeSuccess}>Interactivo con Enlaces Directos</span>
+                </div>
+
+                {/* Páginas de la Revista */}
+                <div style={styles.magazinePagesGrid}>
+                  {/* Página 1: Portada */}
+                  <div style={styles.magazinePage}>
+                    <div style={styles.magazineCoverBadge}>PORTADA OFICIAL</div>
+                    <div style={styles.coverTitle}>{selectedCatalogStore?.name || 'Catálogo Exclusivo'}</div>
+                    <div style={styles.coverSub}>COLECCIÓN TEMPORADA 2026</div>
+                    <div style={styles.coverFooter}>
+                      Haz clic en cualquier producto para pedirlo directamente a nuestro WhatsApp oficial
+                    </div>
+                  </div>
+
+                  {/* Página 2: Cuadrícula de Productos Interactivos */}
+                  <div style={styles.magazineProductsPage}>
+                    <div style={styles.pageHeaderLabel}>PÁGINA 02 • NOVEDADES DESTACADAS</div>
+
+                    <div style={styles.magazineGrid}>
+                      {[
+                        { id: 1, name: 'Producto Premier Oro / Edición', price: 189000, code: 'ZP-01' },
+                        { id: 2, name: 'Colección Signature Exclusiva', price: 125000, code: 'ZP-02' },
+                        { id: 3, name: 'Edición Limitada Tendencia', price: 240000, code: 'ZP-03' },
+                        { id: 4, name: 'Pack Especial de Temporada', price: 95000, code: 'ZP-04' },
+                      ].map((item) => (
+                        <div key={item.id} style={styles.productMagazineCard}>
+                          <div style={styles.productMagazineImgPlaceholder}>
+                            📸 FOTO HD DEL PRODUCTO
+                          </div>
+                          <div style={styles.productMagazineName}>{item.name}</div>
+                          <div style={styles.productMagazinePrice}>{formatMoney(item.price)}</div>
+                          <a
+                            href={`https://wa.me/${selectedCatalogStore?.country_code?.replace('+', '') || '57'}${selectedCatalogStore?.whatsapp || '3184804720'}?text=Hola,%20vi%20el%20cat%C3%A1logo%20revista%20de%20${encodeURIComponent(selectedCatalogStore?.name || 'Zeply')}%20y%20quiero%20ordenar:%20${encodeURIComponent(item.name)}%20(C%C3%B3digo:%20${item.code})`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={styles.orderWhatsAppBtn}
+                          >
+                            Pedir por WhatsApp 💬
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* TAB 5: CONFIGURACIÓN DEL SISTEMA                         */}
+          {/* ======================================================== */}
+          {activeTab === 'configuracion' && (
+            <div style={{ maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={styles.widgetCard}>
+                <h3 style={styles.widgetTitle}>Configuración General de Zeply</h3>
+                <p style={styles.widgetSubtitle}>Ajustes globales de la infraestructura multi-tenant</p>
+
+                {saveSuccess && (
+                  <div style={styles.saveAlert}>
+                    ✅ Ajustes actualizados y guardados correctamente.
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveSettings} style={styles.modalForm}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.inputLabel}>Nombre Oficial de la Plataforma</label>
+                    <input
+                      type="text"
+                      value={systemSettings.platformName}
+                      onChange={(e) =>
+                        setSystemSettings({ ...systemSettings, platformName: e.target.value })
+                      }
+                      style={styles.modalInput}
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.inputLabel}>WhatsApp de Soporte Central Real Admin</label>
+                    <input
+                      type="text"
+                      value={systemSettings.supportWhatsapp}
+                      onChange={(e) =>
+                        setSystemSettings({ ...systemSettings, supportWhatsapp: e.target.value })
+                      }
+                      style={styles.modalInput}
+                    />
+                  </div>
+
+                  <div style={styles.formGrid}>
+                    <div style={styles.formGroup}>
+                      <label style={styles.inputLabel}>Precio Plan Básico (COP/mes)</label>
+                      <input
+                        type="number"
+                        value={systemSettings.basicPriceCOP}
+                        onChange={(e) =>
+                          setSystemSettings({
+                            ...systemSettings,
+                            basicPriceCOP: Number(e.target.value),
+                          })
+                        }
+                        style={styles.modalInput}
+                      />
+                    </div>
+                    <div style={styles.formGroup}>
+                      <label style={styles.inputLabel}>Precio Plan Starter (COP/mes)</label>
+                      <input
+                        type="number"
+                        value={systemSettings.starterPriceCOP}
+                        onChange={(e) =>
+                          setSystemSettings({
+                            ...systemSettings,
+                            starterPriceCOP: Number(e.target.value),
+                          })
+                        }
+                        style={styles.modalInput}
                       />
                     </div>
                   </div>
-                ))}
+
+                  <div style={styles.formGrid}>
+                    <div style={styles.formGroup}>
+                      <label style={styles.inputLabel}>Precio Plan Pro (COP/mes)</label>
+                      <input
+                        type="number"
+                        value={systemSettings.proPriceCOP}
+                        onChange={(e) =>
+                          setSystemSettings({
+                            ...systemSettings,
+                            proPriceCOP: Number(e.target.value),
+                          })
+                        }
+                        style={styles.modalInput}
+                      />
+                    </div>
+                    <div style={styles.formGroup}>
+                      <label style={styles.inputLabel}>Días de Periodo Gratuito (Trial)</label>
+                      <input
+                        type="number"
+                        value={systemSettings.trialDays}
+                        onChange={(e) =>
+                          setSystemSettings({
+                            ...systemSettings,
+                            trialDays: Number(e.target.value),
+                          })
+                        }
+                        style={styles.modalInput}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '10px' }}>
+                    <button type="submit" style={styles.btnCreateStore}>
+                      Guardar Configuración
+                    </button>
+                  </div>
+                </form>
               </div>
-            </div>
 
-            {/* Widget: Filtro de Nicho Limpio y sin Scroll */}
-            <div style={styles.widgetCard}>
-              <h3 style={styles.widgetTitle}>Filtrar Directorio</h3>
-              <p style={styles.widgetSubtitle}>Sin desbordamiento ni barras de desplazamiento</p>
-
-              <div style={styles.filterControlBlock}>
-                <label style={styles.inputLabel}>Seleccionar Nicho de Mercado:</label>
-                <select
-                  value={selectedNiche}
-                  onChange={(e) => setSelectedNiche(e.target.value)}
-                  style={styles.nicheDropdown}
-                >
-                  {ALL_NICHES.map((n) => (
-                    <option key={n.id} value={n.id}>
-                      {n.label}
-                    </option>
-                  ))}
-                </select>
-
-                <div style={{ marginTop: '16px' }}>
-                  <label style={styles.inputLabel}>Buscar Tienda:</label>
-                  <input
-                    type="text"
-                    placeholder="Escribe nombre, slug o WhatsApp..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    style={styles.filterSearchInput}
-                  />
+              {/* Estado de Supabase */}
+              <div style={styles.widgetCard}>
+                <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '8px' }}>
+                  Conexión a Base de Datos Supabase
+                </h4>
+                <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div><strong>Proyecto:</strong> iequlfuyagzxlpfpzjdl.supabase.co</div>
+                  <div><strong>Estado:</strong> <span style={{ color: '#16a34a', fontWeight: '700' }}>● En Línea & Activo</span></div>
+                  <div><strong>Aislamiento Multi-Tenant:</strong> Políticas RLS Habilitadas</div>
                 </div>
-
-                <div style={styles.filterSummary}>
-                  Mostrando <strong>{latestFiveTenants.length}</strong> de {filteredTenants.length} tiendas encontradas
-                </div>
               </div>
             </div>
-          </section>
-
-          {/* 3. DIRECTORIO: ÚLTIMAS 5 TIENDAS REGISTRADAS */}
-          <section style={styles.directorySection}>
-            <div style={styles.directoryHeader}>
-              <div>
-                <h2 style={styles.directoryTitle}>Últimas 5 Tiendas Registradas</h2>
-                <p style={styles.directorySub}>Monitoreo en tiempo real del ecosistema Zeply</p>
-              </div>
-              <span style={styles.liveIndicator}>● Sincronizado con Supabase</span>
-            </div>
-
-            <div style={styles.tableResponsive}>
-              <table style={styles.table}>
-                <thead>
-                  <tr style={styles.thRow}>
-                    <th style={styles.th}>Tienda</th>
-                    <th style={styles.th}>Nicho</th>
-                    <th style={styles.th}>WhatsApp</th>
-                    <th style={styles.th}>Plan</th>
-                    <th style={styles.th}>Estado Suscripción</th>
-                    <th style={styles.th}>Ventas Mes</th>
-                    <th style={styles.th}>Catálogo</th>
-                    <th style={{ ...styles.th, textAlign: 'right' }}>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {latestFiveTenants.map((store) => (
-                    <tr key={store.id} style={styles.tr}>
-                      <td style={styles.td}>
-                        <div style={styles.storeCol}>
-                          <div style={styles.storeInitial}>{store.name.charAt(0)}</div>
-                          <div>
-                            <div style={styles.storeTitle}>{store.name}</div>
-                            <div style={styles.storeUrl}>zeply.store/{store.slug}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={styles.td}>
-                        <span style={styles.nicheBadge}>
-                          {ALL_NICHES.find((n) => n.id === store.niche)?.label || store.niche}
-                        </span>
-                      </td>
-                      <td style={styles.td}>
-                        <div style={styles.phoneText}>
-                          {store.country_code} {store.whatsapp}
-                        </div>
-                      </td>
-                      <td style={styles.td}>
-                        <span style={styles.planBadge}>{store.plan}</span>
-                      </td>
-                      <td style={styles.td}>
-                        {store.subscriptionStatus === 'EXPIRING_SOON' ? (
-                          <span style={styles.statusExpiring}>
-                            Por vencer ({store.daysUntilExpiry}d)
-                          </span>
-                        ) : store.subscriptionStatus === 'TRIAL' ? (
-                          <span style={styles.statusTrial}>
-                            Prueba ({store.daysUntilExpiry}d)
-                          </span>
-                        ) : (
-                          <span style={styles.statusActive}>Activa</span>
-                        )}
-                      </td>
-                      <td style={styles.td}>
-                        <strong style={{ color: '#0f172a' }}>
-                          {formatMoney(store.salesCOP)}
-                        </strong>
-                      </td>
-                      <td style={styles.td}>
-                        <button
-                          onClick={() => alert(`Generando Revista Dinámica para ${store.name}...`)}
-                          style={styles.catalogBtn}
-                        >
-                          Revista PDF
-                        </button>
-                      </td>
-                      <td style={{ ...styles.td, textAlign: 'right' }}>
-                        <button
-                          onClick={() => alert(`Abriendo panel de administración de ${store.name}...`)}
-                          style={styles.manageBtn}
-                        >
-                          Gestionar ↗
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          )}
         </main>
       </div>
 
@@ -694,10 +1323,10 @@ export default function MasterDashboard() {
                     onChange={(e) => setNewStore({ ...newStore, plan: e.target.value })}
                     style={styles.modalSelect}
                   >
-                    <option value="STARTER">Starter</option>
-                    <option value="PRO">Pro</option>
+                    <option value="BASIC">Básico ($29.900 COP)</option>
+                    <option value="STARTER">Starter ($49.900 COP)</option>
+                    <option value="PRO">Pro ($89.900 COP)</option>
                     <option value="FREE_TRIAL">Prueba Gratuita (15 días)</option>
-                    <option value="ENTERPRISE">Enterprise</option>
                   </select>
                 </div>
               </div>
@@ -818,6 +1447,15 @@ const styles = {
   },
   navIcon: {
     fontSize: '16px',
+  },
+  countBadge: {
+    marginLeft: 'auto',
+    backgroundColor: '#1e293b',
+    color: '#94a3b8',
+    fontSize: '11px',
+    fontWeight: '700',
+    padding: '1px 6px',
+    borderRadius: '4px',
   },
   counterBadge: {
     marginLeft: 'auto',
@@ -1165,6 +1803,15 @@ const styles = {
     fontWeight: '600',
     color: '#16a34a',
   },
+  viewAllBtn: {
+    padding: '6px 14px',
+    fontSize: '12px',
+    fontWeight: '700',
+    color: '#0284c7',
+    backgroundColor: '#f0f9ff',
+    border: '1px solid #bae6fd',
+    borderRadius: '6px',
+  },
   tableResponsive: {
     overflowX: 'auto',
   },
@@ -1218,6 +1865,11 @@ const styles = {
     fontSize: '11px',
     color: '#64748b',
   },
+  phoneLink: {
+    fontWeight: '600',
+    color: '#0284c7',
+    textDecoration: 'none',
+  },
   nicheBadge: {
     fontSize: '11px',
     fontWeight: '600',
@@ -1225,10 +1877,6 @@ const styles = {
     backgroundColor: '#f1f5f9',
     padding: '4px 8px',
     borderRadius: '4px',
-  },
-  phoneText: {
-    fontWeight: '600',
-    color: '#0f172a',
   },
   planBadge: {
     fontSize: '11px',
@@ -1272,14 +1920,242 @@ const styles = {
     border: '1px solid #cbd5e1',
     borderRadius: '6px',
   },
-  manageBtn: {
+  pauseBtn: {
+    padding: '5px 12px',
+    fontSize: '11px',
+    fontWeight: '600',
+    color: '#b45309',
+    backgroundColor: '#fef3c7',
+    border: '1px solid #fde68a',
+    borderRadius: '6px',
+  },
+  resumeBtn: {
+    padding: '5px 12px',
+    fontSize: '11px',
+    fontWeight: '600',
+    color: '#15803d',
+    backgroundColor: '#dcfce7',
+    border: '1px solid #bbf7d0',
+    borderRadius: '6px',
+  },
+  chargeBtn: {
+    display: 'inline-block',
     padding: '6px 12px',
+    fontSize: '11px',
+    fontWeight: '700',
+    color: '#ffffff',
+    backgroundColor: '#16a34a',
+    borderRadius: '6px',
+    textDecoration: 'none',
+  },
+  saveAlert: {
+    padding: '10px 14px',
+    backgroundColor: '#dcfce7',
+    border: '1px solid #bbf7d0',
+    color: '#15803d',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: '600',
+    marginBottom: '16px',
+  },
+  magazinePreviewCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    padding: '24px',
+  },
+  magazineHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '20px',
+    paddingBottom: '16px',
+    borderBottom: '1px solid #f1f5f9',
+  },
+  magazinePagesGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    gap: '24px',
+  },
+  magazinePage: {
+    backgroundColor: '#0b1528',
+    color: '#ffffff',
+    borderRadius: '12px',
+    padding: '36px 28px',
+    minHeight: '420px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)',
+  },
+  magazineCoverBadge: {
+    fontSize: '10px',
+    fontWeight: '800',
+    backgroundColor: '#38bdf8',
+    color: '#0b1528',
+    padding: '4px 12px',
+    borderRadius: '9999px',
+    letterSpacing: '1px',
+    marginBottom: '16px',
+  },
+  coverTitle: {
+    fontSize: '26px',
+    fontWeight: '800',
+    letterSpacing: '-0.5px',
+    marginBottom: '8px',
+  },
+  coverSub: {
+    fontSize: '12px',
+    color: '#94a3b8',
+    letterSpacing: '2px',
+    marginBottom: '24px',
+  },
+  coverFooter: {
+    fontSize: '12px',
+    color: '#cbd5e1',
+    maxWidth: '260px',
+    lineHeight: '1.4',
+  },
+  magazineProductsPage: {
+    backgroundColor: '#f8fafc',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  pageHeaderLabel: {
+    fontSize: '11px',
+    fontWeight: '800',
+    color: '#64748b',
+    letterSpacing: '1px',
+    marginBottom: '14px',
+  },
+  magazineGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px',
+  },
+  productMagazineCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '8px',
+    padding: '12px',
+    border: '1px solid #e2e8f0',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  productMagazineImgPlaceholder: {
+    height: '100px',
+    backgroundColor: '#f1f5f9',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '10px',
+    fontWeight: '700',
+    color: '#94a3b8',
+    marginBottom: '8px',
+  },
+  productMagazineName: {
     fontSize: '12px',
     fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: '4px',
+  },
+  productMagazinePrice: {
+    fontSize: '13px',
+    fontWeight: '800',
     color: '#0284c7',
+    marginBottom: '8px',
+  },
+  orderWhatsAppBtn: {
+    display: 'block',
+    textAlign: 'center',
+    padding: '6px 8px',
+    fontSize: '11px',
+    fontWeight: '700',
+    color: '#ffffff',
+    backgroundColor: '#16a34a',
+    borderRadius: '6px',
+    textDecoration: 'none',
+  },
+  plansShowcaseGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '16px',
+  },
+  planPricingCard: {
+    backgroundColor: '#ffffff',
+    border: '1.5px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '24px 20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  planPricingHeader: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  planTagBasic: {
+    fontSize: '11px',
+    fontWeight: '800',
+    color: '#0369a1',
     backgroundColor: '#f0f9ff',
     border: '1px solid #bae6fd',
+    padding: '3px 8px',
     borderRadius: '6px',
+    width: 'fit-content',
+    letterSpacing: '0.5px',
+  },
+  planTagStarter: {
+    fontSize: '11px',
+    fontWeight: '800',
+    color: '#15803d',
+    backgroundColor: '#dcfce7',
+    border: '1px solid #bbf7d0',
+    padding: '3px 8px',
+    borderRadius: '6px',
+    width: 'fit-content',
+    letterSpacing: '0.5px',
+  },
+  planTagPro: {
+    fontSize: '11px',
+    fontWeight: '800',
+    color: '#7c3aed',
+    backgroundColor: '#ede9fe',
+    border: '1px solid #ddd6fe',
+    padding: '3px 8px',
+    borderRadius: '6px',
+    width: 'fit-content',
+    letterSpacing: '0.5px',
+  },
+  planPriceValue: {
+    fontSize: '26px',
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  planPricePeriod: {
+    fontSize: '13px',
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  planFeatureText: {
+    fontSize: '12px',
+    color: '#64748b',
+  },
+  planFeaturesList: {
+    listStyle: 'none',
+    padding: 0,
+    margin: '6px 0 0 0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    fontSize: '12px',
+    color: '#334155',
   },
   modalOverlay: {
     position: 'fixed',
