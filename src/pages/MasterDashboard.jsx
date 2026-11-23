@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { downloadStorePdfCatalog } from '../lib/pdfGenerator';
 
 // Nichos completos del ecosistema Zeply
 const ALL_NICHES = [
@@ -104,10 +105,37 @@ export default function MasterDashboard() {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
+  // Tienda de Demostración por Defecto para el Master Admin
+  const DEFAULT_DEMO_STORE = {
+    id: 'demo-aura',
+    name: 'Aura Joyas & Relojes',
+    slug: 'aurajoyas',
+    niche: 'joyeria',
+    whatsapp: '3184804720',
+    country_code: '+57',
+    plan: 'PRO',
+    status: 'ACTIVE',
+  };
+
   // Revistas PDF & Catálogo Interactivo
-  const [selectedCatalogStore, setSelectedCatalogStore] = useState(null);
+  const [selectedCatalogStore, setSelectedCatalogStore] = useState(DEFAULT_DEMO_STORE);
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [magazinePreviewPage, setMagazinePreviewPage] = useState(1);
+  const [showMagazineModal, setShowMagazineModal] = useState(false);
+  const [magazineModalStore, setMagazineModalStore] = useState(DEFAULT_DEMO_STORE);
+  const [modalMagazinePage, setModalMagazinePage] = useState(1);
+
+  const handleDownloadPdf = (storeToDownload) => {
+    const targetStore = storeToDownload || selectedCatalogStore || (tenants.length > 0 ? tenants[0] : DEFAULT_DEMO_STORE);
+    setPdfGenerating(true);
+    try {
+      downloadStorePdfCatalog(targetStore, currency);
+    } catch (err) {
+      console.error('Error generando PDF:', err);
+    } finally {
+      setTimeout(() => setPdfGenerating(false), 700);
+    }
+  };
 
   // Configuración
   const [systemSettings, setSystemSettings] = useState({
@@ -767,12 +795,36 @@ export default function MasterDashboard() {
                             </strong>
                           </td>
                           <td style={styles.td}>
-                            <button
-                              onClick={() => handleOpenPdfMagazine(store)}
-                              style={styles.catalogBtn}
-                            >
-                              📖 Revista PDF
-                            </button>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                onClick={() => {
+                                  setMagazineModalStore(store);
+                                  setModalMagazinePage(1);
+                                  setShowMagazineModal(true);
+                                }}
+                                style={{
+                                  ...styles.catalogBtn,
+                                  backgroundColor: '#0284c7',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                }}
+                                title="Ver Revista Interactiva HD"
+                              >
+                                📖 Revista
+                              </button>
+                              <button
+                                onClick={() => handleDownloadPdf(store)}
+                                style={{
+                                  ...styles.catalogBtn,
+                                  backgroundColor: '#f1f5f9',
+                                  color: '#0f172a',
+                                  border: '1px solid #cbd5e1',
+                                }}
+                                title="Descargar Catálogo PDF"
+                              >
+                                📥 PDF
+                              </button>
+                            </div>
                           </td>
                           <td style={{ ...styles.td, textAlign: 'right' }}>
                             <button
@@ -889,12 +941,36 @@ export default function MasterDashboard() {
                           </span>
                         </td>
                         <td style={styles.td}>
-                          <button
-                            onClick={() => handleOpenPdfMagazine(store)}
-                            style={styles.catalogBtn}
-                          >
-                            📖 Ver Revista
-                          </button>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                              onClick={() => {
+                                setMagazineModalStore(store);
+                                setModalMagazinePage(1);
+                                setShowMagazineModal(true);
+                              }}
+                              style={{
+                                ...styles.catalogBtn,
+                                backgroundColor: '#0284c7',
+                                color: '#ffffff',
+                                border: 'none',
+                              }}
+                              title="Ver Revista Interactiva HD"
+                            >
+                              📖 Revista
+                            </button>
+                            <button
+                              onClick={() => handleDownloadPdf(store)}
+                              style={{
+                                ...styles.catalogBtn,
+                                backgroundColor: '#f1f5f9',
+                                color: '#0f172a',
+                                border: '1px solid #cbd5e1',
+                              }}
+                              title="Descargar Catálogo PDF"
+                            >
+                              📥 PDF
+                            </button>
+                          </div>
                         </td>
                         <td style={{ ...styles.td, textAlign: 'right' }}>
                           <button
@@ -1151,6 +1227,51 @@ export default function MasterDashboard() {
                 </div>
               </div>
 
+              {/* Acceso Especial Master Admin Otto Donado */}
+              <div style={{
+                backgroundColor: '#eff6ff',
+                border: '2px solid #3b82f6',
+                borderRadius: '10px',
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '28px' }}>👑</span>
+                  <div>
+                    <div style={{ fontSize: '15px', fontWeight: '800', color: '#1e3a8a' }}>
+                      Modo Master Admin: Otto Donado (Acceso Ilimitado)
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#1d4ed8', marginTop: '2px' }}>
+                      Como dueño de Zeply, puedes <strong>ver e interactuar con la Revista HD</strong> y <strong>descargar el PDF real</strong> de cualquier tienda sin importar su plan.
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setMagazineModalStore(selectedCatalogStore || (tenants.length > 0 ? tenants[0] : DEFAULT_DEMO_STORE));
+                    setModalMagazinePage(1);
+                    setShowMagazineModal(true);
+                  }}
+                  style={{
+                    backgroundColor: '#1d4ed8',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '10px 18px',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(29, 78, 216, 0.3)'
+                  }}
+                >
+                  🔍 Abrir Visor de Revista en Pantalla Completa
+                </button>
+              </div>
+
               {/* Selector de Tienda y Acciones */}
               <div style={styles.widgetCard}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
@@ -1180,6 +1301,22 @@ export default function MasterDashboard() {
                       )}
                     </select>
 
+                    <button
+                      onClick={() => {
+                        setMagazineModalStore(selectedCatalogStore || (tenants.length > 0 ? tenants[0] : DEFAULT_DEMO_STORE));
+                        setModalMagazinePage(1);
+                        setShowMagazineModal(true);
+                      }}
+                      style={{
+                        ...styles.btnCreateStore,
+                        backgroundColor: '#0284c7',
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      📖 Ver Revista Interactiva
+                    </button>
+
                     <a
                       href={`/revista/${selectedCatalogStore?.slug || 'aurajoyas'}`}
                       target="_blank"
@@ -1193,20 +1330,19 @@ export default function MasterDashboard() {
                         gap: '6px',
                       }}
                     >
-                      🚀 Abrir Vista del Cliente (Web) ↗
+                      🚀 Enlace Cliente (Web) ↗
                     </a>
 
                     <button
-                      onClick={() => {
-                        setPdfGenerating(true);
-                        setTimeout(() => {
-                          setPdfGenerating(false);
-                          alert(`¡Catálogo PDF estándar de "${selectedCatalogStore?.name || 'la tienda'}" generado con éxito para descargar!`);
-                        }, 1200);
+                      onClick={() => handleDownloadPdf(selectedCatalogStore)}
+                      disabled={pdfGenerating}
+                      style={{
+                        ...styles.btnCreateStore,
+                        backgroundColor: '#0f172a',
+                        cursor: pdfGenerating ? 'wait' : 'pointer',
                       }}
-                      style={styles.btnCreateStore}
                     >
-                      {pdfGenerating ? 'Generando PDF...' : '📥 Descargar PDF Estándar'}
+                      {pdfGenerating ? 'Generando y Descargando...' : '📥 Descargar PDF Real'}
                     </button>
                   </div>
                 </div>
@@ -1800,6 +1936,369 @@ export default function MasterDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL DE REVISTA DIGITAL INTERACTIVA (MODO MASTER ADMIN) ── */}
+      {showMagazineModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(11, 17, 32, 0.88)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '860px',
+            maxHeight: '92vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            border: '1px solid rgba(255,255,255,0.2)',
+          }}>
+            {/* Modal Top Bar */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '14px 20px',
+              backgroundColor: '#0f172a',
+              color: '#ffffff',
+              borderBottom: '1px solid #1e293b',
+              flexWrap: 'wrap',
+              gap: '10px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '20px' }}>📖</span>
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: '800' }}>
+                    Revista Interactiva: {magazineModalStore?.name || 'Tienda Zeply'}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                    Nicho: {ALL_NICHES.find((n) => n.id === magazineModalStore?.niche)?.label || 'General'} • WhatsApp: +57 {magazineModalStore?.whatsapp}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  onClick={() => handleDownloadPdf(magazineModalStore)}
+                  disabled={pdfGenerating}
+                  style={{
+                    backgroundColor: '#16a34a',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {pdfGenerating ? 'Descargando...' : '📥 Descargar PDF Real'}
+                </button>
+                <a
+                  href={`/revista/${magazineModalStore?.slug || 'aurajoyas'}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    backgroundColor: '#0284c7',
+                    color: '#ffffff',
+                    textDecoration: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                  }}
+                >
+                  🚀 Enlace Cliente ↗
+                </a>
+                <button
+                  onClick={() => setShowMagazineModal(false)}
+                  style={{
+                    backgroundColor: '#334155',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Revista Spread */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', backgroundColor: '#f8fafc' }}>
+              {/* Navegador de páginas */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <button
+                  onClick={() => setModalMagazinePage((p) => Math.max(1, p - 1))}
+                  disabled={modalMagazinePage === 1}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '6px 14px',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    color: '#0f172a',
+                    cursor: modalMagazinePage === 1 ? 'not-allowed' : 'pointer',
+                    opacity: modalMagazinePage === 1 ? 0.4 : 1,
+                  }}
+                >
+                  ◀ Página Anterior
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a' }}>
+                    Página {modalMagazinePage} de 4
+                  </span>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>
+                    ({modalMagazinePage === 1 ? 'Portada' : modalMagazinePage === 2 ? 'Tendencias' : modalMagazinePage === 3 ? 'Colección' : 'Envíos & Pagos'})
+                  </span>
+                </div>
+                <button
+                  onClick={() => setModalMagazinePage((p) => Math.min(4, p + 1))}
+                  disabled={modalMagazinePage === 4}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '6px 14px',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    color: '#0f172a',
+                    cursor: modalMagazinePage === 4 ? 'not-allowed' : 'pointer',
+                    opacity: modalMagazinePage === 4 ? 0.4 : 1,
+                  }}
+                >
+                  Página Siguiente ▶
+                </button>
+              </div>
+
+              {/* PÁGINA 1: PORTADA */}
+              {modalMagazinePage === 1 && (
+                <div style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '12px',
+                  padding: '36px',
+                  border: '1px solid #e2e8f0',
+                  textAlign: 'center',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+                }}>
+                  <div style={{ fontSize: '11px', fontWeight: '800', color: '#0284c7', letterSpacing: '0.15em', marginBottom: '8px' }}>
+                    LOOKBOOK EDITORIAL 2026
+                  </div>
+                  <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', margin: '0 0 8px 0' }}>
+                    {magazineModalStore?.name?.toUpperCase() || 'AURA JOYAS & RELOJES'}
+                  </h2>
+                  <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 20px 0' }}>
+                    Colección Oficial Exclusiva • Pedidos Directos a WhatsApp
+                  </p>
+                  <div style={{
+                    height: '240px',
+                    borderRadius: '10px',
+                    backgroundImage: 'url(https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    padding: '20px',
+                    marginBottom: '24px',
+                  }}>
+                    <div style={{ background: 'rgba(15,23,42,0.8)', color: '#ffffff', padding: '12px 18px', borderRadius: '8px', textAlign: 'left' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '800', color: '#38bdf8' }}>TEMPORADA 2026</div>
+                      <div style={{ fontSize: '18px', fontWeight: '800' }}>Catálogo Digital de Alta Definición</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setModalMagazinePage(2)}
+                    style={{
+                      backgroundColor: '#0284c7',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Abrir Colección (Página 2) →
+                  </button>
+                </div>
+              )}
+
+              {/* PÁGINA 2: PRODUCTOS */}
+              {modalMagazinePage === 2 && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7' }}>PÁGINA 02 • TENDENCIAS</span>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>Haz clic en un producto para ordenar por WhatsApp</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                    {[
+                      { id: 1, name: 'Anillo Solitario Oro 18K & Diamante', price: 289000, code: 'ZP-01', tag: 'TOP VENTAS' },
+                      { id: 2, name: 'Reloj Cronógrafo Signature Black', price: 420000, code: 'ZP-02', tag: 'EDICIÓN LIMITADA' },
+                      { id: 3, name: 'Cadena Eslabón Cubano Plata 925', price: 185000, code: 'ZP-03', tag: 'TENDENCIA' },
+                      { id: 4, name: 'Aretes Perla Cultivada y Baño Oro', price: 135000, code: 'ZP-04', tag: 'NUEVO' },
+                    ].map((item) => (
+                      <div key={item.id} style={{
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '10px',
+                        padding: '14px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}>
+                        <div style={{ height: '120px', backgroundColor: '#f1f5f9', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#64748b', fontWeight: '700', marginBottom: '10px' }}>
+                          📸 FOTOGRAFÍA HD
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: '800', color: '#0284c7' }}>{item.tag}</span>
+                        <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', margin: '4px 0 8px 0', lineHeight: '1.3' }}>{item.name}</h4>
+                        <div style={{ fontSize: '16px', fontWeight: '900', color: '#0284c7', marginBottom: '12px' }}>{formatMoney(item.price)}</div>
+                        <a
+                          href={`https://wa.me/57${magazineModalStore?.whatsapp || '3184804720'}?text=${encodeURIComponent(`Hola, vi la Revista Interactiva de ${magazineModalStore?.name || 'Zeply'} y quiero pedir: ${item.name} (${formatMoney(item.price)})`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            backgroundColor: '#16a34a',
+                            color: '#ffffff',
+                            textDecoration: 'none',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: '800',
+                            textAlign: 'center',
+                            display: 'block',
+                            marginTop: 'auto',
+                          }}
+                        >
+                          💬 Pedir por WhatsApp
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* PÁGINA 3: COLECCIÓN SIGNATURE */}
+              {modalMagazinePage === 3 && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7' }}>PÁGINA 03 • LÍNEA SIGNATURE</span>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>Disponibilidad inmediata con despacho rápido</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                    {[
+                      { id: 5, name: 'Pulsera Tennis Circones Suizos', price: 210000, code: 'ZP-05', tag: 'EXCLUSIVO' },
+                      { id: 6, name: 'Dije Personalizado Inicial Oro', price: 165000, code: 'ZP-06', tag: 'PERSONALIZABLE' },
+                      { id: 7, name: 'Estuche Organizador de Viaje Cuero', price: 89000, code: 'ZP-07', tag: 'ACCESORIO' },
+                      { id: 8, name: 'Set de Limpieza y Brillo Joyería', price: 45000, code: 'ZP-08', tag: 'CUIDADO' },
+                    ].map((item) => (
+                      <div key={item.id} style={{
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '10px',
+                        padding: '14px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}>
+                        <div style={{ height: '120px', backgroundColor: '#f1f5f9', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#64748b', fontWeight: '700', marginBottom: '10px' }}>
+                          📸 FOTOGRAFÍA HD
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: '800', color: '#0284c7' }}>{item.tag}</span>
+                        <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', margin: '4px 0 8px 0', lineHeight: '1.3' }}>{item.name}</h4>
+                        <div style={{ fontSize: '16px', fontWeight: '900', color: '#0284c7', marginBottom: '12px' }}>{formatMoney(item.price)}</div>
+                        <a
+                          href={`https://wa.me/57${magazineModalStore?.whatsapp || '3184804720'}?text=${encodeURIComponent(`Hola, vi la Revista Interactiva de ${magazineModalStore?.name || 'Zeply'} y quiero pedir: ${item.name} (${formatMoney(item.price)})`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            backgroundColor: '#16a34a',
+                            color: '#ffffff',
+                            textDecoration: 'none',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: '800',
+                            textAlign: 'center',
+                            display: 'block',
+                            marginTop: 'auto',
+                          }}
+                        >
+                          💬 Pedir por WhatsApp
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* PÁGINA 4: CONTRAPORTADA */}
+              {modalMagazinePage === 4 && (
+                <div style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '12px',
+                  padding: '36px',
+                  border: '1px solid #e2e8f0',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '11px', fontWeight: '800', color: '#16a34a', letterSpacing: '0.15em', marginBottom: '8px' }}>
+                    PÁGINA 04 • CONTRAPORTADA & FORMAS DE PAGO
+                  </div>
+                  <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', margin: '0 0 16px 0' }}>
+                    Atención Directa y Medios de Pago
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px', textAlign: 'left' }}>
+                    <div style={{ padding: '14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <strong style={{ fontSize: '13px', color: '#0f172a', display: 'block', marginBottom: '4px' }}>💬 Atención Personalizada</strong>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>Asesoría directa en el WhatsApp de la tienda: +57 {magazineModalStore?.whatsapp || '3184804720'}.</span>
+                    </div>
+                    <div style={{ padding: '14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <strong style={{ fontSize: '13px', color: '#0f172a', display: 'block', marginBottom: '4px' }}>🚚 Envíos Nacionales</strong>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>Despachos rápidos y seguros a todo el país con guía de rastreo.</span>
+                    </div>
+                    <div style={{ padding: '14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <strong style={{ fontSize: '13px', color: '#0f172a', display: 'block', marginBottom: '4px' }}>🛡️ Garantía Oficial</strong>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>Respaldo garantizado y soporte en cada una de tus órdenes.</span>
+                    </div>
+                  </div>
+                  <a
+                    href={`https://wa.me/57${magazineModalStore?.whatsapp || '3184804720'}?text=${encodeURIComponent(`Hola ${magazineModalStore?.name || 'Zeply'}, estuve viendo el catálogo en la revista y deseo hacer una consulta.`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      backgroundColor: '#16a34a',
+                      color: '#ffffff',
+                      textDecoration: 'none',
+                      padding: '12px 28px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '800',
+                      display: 'inline-block',
+                    }}
+                  >
+                    💬 Contactar por WhatsApp
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
