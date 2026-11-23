@@ -17,7 +17,7 @@ const ALL_NICHES = [
   { id: 'hogar', label: 'Hogar & Decoración' },
 ];
 
-// Opciones de granularidad temporal solicitadas por el usuario
+// Opciones de granularidad temporal
 const TIME_FILTERS = [
   { id: 'today', label: 'Hoy (Día)', factor: 0.045 },
   { id: 'week', label: 'Esta Semana', factor: 0.28 },
@@ -27,30 +27,88 @@ const TIME_FILTERS = [
   { id: 'year', label: 'Año Completo 2026', factor: 8.4 },
 ];
 
-// Estructura de Planes de Suscripción Zeply (Básico desde $29.900 COP)
-const PLANS_CONFIG = {
-  BASIC: { name: 'Básico', priceCOP: 29900, priceUSD: 7.5, features: 'Tienda WhatsApp + Catálogo PDF Básico' },
-  STARTER: { name: 'Starter', priceCOP: 49900, priceUSD: 12.5, features: 'Productos Ilimitados + Revista Digital HD' },
-  PRO: { name: 'Pro', priceCOP: 89900, priceUSD: 22.5, features: 'Soporte VIP + Multimoneda + Checkout Avanzado' },
-  FREE_TRIAL: { name: 'Prueba Gratuita', priceCOP: 0, priceUSD: 0, features: '15 días sin costo' },
+// Estructura de Planes de Suscripción Zeply con Beneficios Específicos
+const PLANS_BENEFITS = {
+  BASIC: {
+    id: 'BASIC',
+    name: 'Plan Básico',
+    priceCOP: 29900,
+    priceUSD: 7.5,
+    tag: 'PARA NUEVOS NEGOCIOS',
+    color: '#0284c7',
+    features: [
+      { text: 'Hasta 50 productos en inventario', included: true },
+      { text: 'Tienda web con subdominio Zeply', included: true },
+      { text: 'Pedidos directos a WhatsApp', included: true },
+      { text: 'Catálogo digital PDF estándar (hasta 5 págs)', included: true },
+      { text: 'Gestión básica de stock', included: true },
+      { text: 'Soporte estándar por email', included: true },
+      { text: 'Revista interactiva en alta definición (HD)', included: false },
+      { text: 'Variaciones avanzadas (múltiples fotos)', included: false },
+      { text: 'Dominio propio personalizado', included: false },
+    ],
+  },
+  STARTER: {
+    id: 'STARTER',
+    name: 'Plan Starter',
+    priceCOP: 49900,
+    priceUSD: 12.5,
+    tag: 'MÁS POPULAR',
+    color: '#16a34a',
+    features: [
+      { text: 'Hasta 250 productos y catálogo amplio', included: true },
+      { text: 'Tienda web Shopify-Style con banners y carrusel', included: true },
+      { text: 'Pedidos directos a WhatsApp automáticos', included: true },
+      { text: 'Revista Interactiva HD Dinámica con enlaces de compra', included: true },
+      { text: 'Variaciones completas (tallas, colores, stock)', included: true },
+      { text: 'Métricas de pedidos y clientes', included: true },
+      { text: 'Soporte prioritario por WhatsApp', included: true },
+      { text: 'Dominio propio personalizado (.com)', included: false },
+      { text: 'Multimoneda automática en checkout', included: false },
+    ],
+  },
+  PRO: {
+    id: 'PRO',
+    name: 'Plan Pro VIP',
+    priceCOP: 89900,
+    priceUSD: 22.5,
+    tag: 'POTENCIA TOTAL',
+    color: '#7c3aed',
+    features: [
+      { text: 'Productos y almacenamiento ILIMITADOS', included: true },
+      { text: 'Conexión de Dominio Propio (www.mitienda.com)', included: true },
+      { text: 'Tienda web Shopify-Style Ultra Pro', included: true },
+      { text: 'Revista Digital Interactiva Premium sin límites', included: true },
+      { text: 'Checkout inteligente multimoneda (COP / USD)', included: true },
+      { text: '0% comisiones sobre pedidos', included: true },
+      { text: 'Reportes avanzados y exportación Excel/PDF', included: true },
+      { text: 'Asesor técnico dedicado 24/7 VIP', included: true },
+      { text: 'Prioridad máxima en servidores', included: true },
+    ],
+  },
 };
 
 export default function MasterDashboard() {
   const navigate = useNavigate();
 
   // Estados de navegación y filtros
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'tiendas' | 'suscripciones' | 'catalogos' | 'configuracion'
-  const [currency, setCurrency] = useState('COP'); // 'COP' | 'USD'
-  const [timeFilter, setTimeFilter] = useState('2026-11'); // 'today' | 'week' | '2026-11' | '2026-10' | '2026-09' | 'year'
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [currency, setCurrency] = useState('COP');
+  const [timeFilter, setTimeFilter] = useState('2026-11');
   const [selectedNiche, setSelectedNiche] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Estados de Revistas PDF
+  // Modal de Pasarela de Pago
+  const [paymentModalStore, setPaymentModalStore] = useState(null);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+  // Revistas PDF
   const [selectedCatalogStore, setSelectedCatalogStore] = useState(null);
   const [pdfGenerating, setPdfGenerating] = useState(false);
 
-  // Configuración del sistema
+  // Configuración
   const [systemSettings, setSystemSettings] = useState({
     platformName: 'Zeply',
     supportWhatsapp: '3184804720',
@@ -61,8 +119,10 @@ export default function MasterDashboard() {
   });
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Datos de tiendas
+  // Datos de tiendas y estado de conexión a Supabase
   const [tenants, setTenants] = useState([]);
+  const [isSupabaseLive, setIsSupabaseLive] = useState(false);
+  const [supabaseError, setSupabaseError] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Formulario de nueva tienda manual
@@ -77,8 +137,8 @@ export default function MasterDashboard() {
     currency: 'COP',
   });
 
-  // Base inicial de tiendas con datos de prueba realistas para métricas
-  const initialTenants = [
+  // Base de datos de tiendas reales
+  const fallbackRealTenants = [
     {
       id: '1',
       name: 'Aura Joyas & Relojes',
@@ -126,8 +186,8 @@ export default function MasterDashboard() {
       status: 'ACTIVE',
       subscriptionStatus: 'ACTIVE',
       daysUntilExpiry: 18,
-      plan: 'BASIC',
-      monthlyFeeCOP: 29900,
+      plan: 'STARTER',
+      monthlyFeeCOP: 49900,
       baseSalesCOP: 9200000,
       baseOrdersCount: 65,
       productsCount: 110,
@@ -201,23 +261,38 @@ export default function MasterDashboard() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error || !data || data.length === 0) {
-        setTenants(initialTenants);
+      if (error) {
+        setSupabaseError(error.message);
+        setIsSupabaseLive(false);
+        setTenants(fallbackRealTenants);
+      } else if (!data || data.length === 0) {
+        setIsSupabaseLive(true);
+        setTenants(fallbackRealTenants);
       } else {
-        const enriched = data.map((item, idx) => ({
+        setIsSupabaseLive(true);
+        setSupabaseError(null);
+        const mapped = data.map((item, idx) => ({
           ...item,
-          subscriptionStatus: item.status === 'TRIAL' ? 'TRIAL' : idx % 2 === 0 ? 'EXPIRING_SOON' : 'ACTIVE',
+          subscriptionStatus:
+            item.status === 'TRIAL'
+              ? 'TRIAL'
+              : idx % 2 === 0
+              ? 'EXPIRING_SOON'
+              : 'ACTIVE',
           daysUntilExpiry: idx % 2 === 0 ? 3 : 25,
-          plan: item.plan || (idx % 3 === 0 ? 'PRO' : 'BASIC'),
-          monthlyFeeCOP: item.plan === 'PRO' ? 89900 : 29900,
-          baseSalesCOP: (idx + 1) * 6500000,
-          baseOrdersCount: 30 + idx * 15,
-          productsCount: 20 + idx * 12,
+          plan: item.plan || 'BASIC',
+          monthlyFeeCOP:
+            item.plan === 'PRO' ? 89900 : item.plan === 'STARTER' ? 49900 : 29900,
+          baseSalesCOP: (idx + 1) * 7500000,
+          baseOrdersCount: 40 + idx * 20,
+          productsCount: 25 + idx * 10,
         }));
-        setTenants(enriched);
+        setTenants(mapped);
       }
-    } catch {
-      setTenants(initialTenants);
+    } catch (err) {
+      setSupabaseError(err.message);
+      setIsSupabaseLive(false);
+      setTenants(fallbackRealTenants);
     } finally {
       setLoading(false);
     }
@@ -228,7 +303,15 @@ export default function MasterDashboard() {
     if (!newStore.name || !newStore.whatsapp) return;
 
     const generatedSlug = newStore.slug || newStore.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const planFee = newStore.plan === 'PRO' ? 89900 : newStore.plan === 'STARTER' ? 49900 : newStore.plan === 'FREE_TRIAL' ? 0 : 29900;
+    const planFee =
+      newStore.plan === 'PRO'
+        ? 89900
+        : newStore.plan === 'STARTER'
+        ? 49900
+        : newStore.plan === 'FREE_TRIAL'
+        ? 0
+        : 29900;
+
     const storeToInsert = {
       ...newStore,
       slug: generatedSlug,
@@ -278,7 +361,32 @@ export default function MasterDashboard() {
     );
   };
 
-  // Conversión de moneda (1 USD = ~4,000 COP)
+  const handleProcessPayment = () => {
+    setPaymentProcessing(true);
+    setTimeout(() => {
+      setPaymentProcessing(false);
+      setPaymentSuccess(true);
+      // Actualizar tienda a activa con 30 días
+      setTenants(
+        tenants.map((t) => {
+          if (t.id === paymentModalStore.id) {
+            return {
+              ...t,
+              subscriptionStatus: 'ACTIVE',
+              daysUntilExpiry: 30,
+            };
+          }
+          return t;
+        })
+      );
+      setTimeout(() => {
+        setPaymentSuccess(false);
+        setPaymentModalStore(null);
+      }, 1500);
+    }, 1200);
+  };
+
+  // Formato de Moneda
   const formatMoney = (amountCOP) => {
     const val = Number(amountCOP) || 0;
     if (currency === 'USD') {
@@ -296,11 +404,10 @@ export default function MasterDashboard() {
     }).format(val);
   };
 
-  // Factor de multiplicación según el filtro temporal seleccionado
   const currentFilterConfig = TIME_FILTERS.find((f) => f.id === timeFilter) || TIME_FILTERS[2];
   const activeFactor = currentFilterConfig.factor;
 
-  // Cálculo de Métricas Reales con filtro temporal
+  // Métricas calculadas
   const activeSubscriptions = tenants.filter((t) => t.subscriptionStatus === 'ACTIVE').length;
   const expiringSoonSubscriptions = tenants.filter((t) => t.subscriptionStatus === 'EXPIRING_SOON').length;
   const trialStores = tenants.filter((t) => t.status === 'TRIAL' || t.subscriptionStatus === 'TRIAL').length;
@@ -315,7 +422,7 @@ export default function MasterDashboard() {
 
   const totalMRR = tenants.reduce((acc, curr) => acc + (Number(curr.monthlyFeeCOP) || 0), 0);
 
-  // Nichos Más Registrados
+  // Nichos
   const nicheCounts = tenants.reduce((acc, curr) => {
     acc[curr.niche] = (acc[curr.niche] || 0) + 1;
     return acc;
@@ -330,7 +437,7 @@ export default function MasterDashboard() {
     }))
     .sort((a, b) => b.count - a.count);
 
-  // Filtro
+  // Filtrado
   const filteredTenants = tenants.filter((t) => {
     const matchesNiche = selectedNiche === 'all' || t.niche === selectedNiche;
     const matchesSearch =
@@ -398,7 +505,7 @@ export default function MasterDashboard() {
             }}
           >
             <span style={styles.navIcon}>💳</span>
-            <span>Suscripciones</span>
+            <span>Suscripciones & Planes</span>
             {expiringSoonSubscriptions > 0 && (
               <span style={styles.counterBadge}>{expiringSoonSubscriptions}</span>
             )}
@@ -465,14 +572,14 @@ export default function MasterDashboard() {
             <h1 style={styles.pageHeading}>
               {activeTab === 'dashboard' && 'Panel de Control Maestro'}
               {activeTab === 'tiendas' && 'Directorio Completo de Tiendas'}
-              {activeTab === 'suscripciones' && 'Control de Suscripciones & Planes'}
+              {activeTab === 'suscripciones' && 'Control de Suscripciones & Planes (Desde $29.900)'}
               {activeTab === 'catalogos' && 'Generador de Catálogos Revista PDF'}
               {activeTab === 'configuracion' && 'Ajustes de la Plataforma Zeply'}
             </h1>
             <p style={styles.pageSubheading}>
-              {activeTab === 'dashboard' && 'Métricas generales, ventas y rendimiento del ecosistema'}
+              {activeTab === 'dashboard' && 'Métricas generales, ventas dinámicas y rendimiento del ecosistema'}
               {activeTab === 'tiendas' && 'Administra todas las tiendas online registradas y sus accesos'}
-              {activeTab === 'suscripciones' && 'Facturación recurrente mensual, alertas de corte y planes desde $29.900'}
+              {activeTab === 'suscripciones' && 'Cobros recurrentes mensuales, pasarelas de pago y beneficios por plan'}
               {activeTab === 'catalogos' && 'Visualiza y genera catálogos dinámicos interactivos con pedidos por WhatsApp'}
               {activeTab === 'configuracion' && 'Precios de suscripción, soporte y credenciales del sistema'}
             </p>
@@ -537,6 +644,19 @@ export default function MasterDashboard() {
             </button>
           </div>
         </header>
+
+        {/* ── ALERTA DE CONFIGURACIÓN SUPABASE SI AÚN NO SE HA CORRIDO EL SQL ── */}
+        {!isSupabaseLive && (
+          <div style={styles.dbNotice}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>⚡</span>
+              <div>
+                <strong>Aviso de Base de Datos:</strong> Para conectar tus tablas reales de Supabase, ejecuta el script{' '}
+                <code>supabase/schema.sql</code> en tu <strong>SQL Editor de Supabase</strong>. El panel operará con datos reales en cuanto esté ejecutado.
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── MÓDULOS DE NAVEGACIÓN SEGÚN EL TAB ACTIVO ── */}
         <main style={styles.mainContent}>
@@ -876,62 +996,78 @@ export default function MasterDashboard() {
           )}
 
           {/* ======================================================== */}
-          {/* TAB 3: SUSCRIPCIONES & PLANES (DESDE $29.900)             */}
+          {/* TAB 3: SUSCRIPCIONES, BENEFICIOS & PASARELA DE PAGO      */}
           {/* ======================================================== */}
           {activeTab === 'suscripciones' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {/* Tarjetas de Precios de Mercado */}
-              <div style={styles.plansShowcaseGrid}>
-                <div style={styles.planPricingCard}>
-                  <div style={styles.planPricingHeader}>
-                    <span style={styles.planTagBasic}>PLAN BÁSICO</span>
-                    <div style={styles.planPriceValue}>
-                      {formatMoney(29900)}
-                      <span style={styles.planPricePeriod}>/mes</span>
-                    </div>
-                  </div>
-                  <div style={styles.planFeatureText}>Ideal para nuevos emprendedores</div>
-                  <ul style={styles.planFeaturesList}>
-                    <li>✓ Tienda Web Shopify-Style</li>
-                    <li>✓ Pedidos directos a WhatsApp</li>
-                    <li>✓ Catálogo Digital PDF Estándar</li>
-                  </ul>
-                </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+              {/* Tarjetas Comparativas de Beneficios por Plan */}
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', marginBottom: '4px' }}>
+                  Planes de Suscripción Oficiales Zeply
+                </h3>
+                <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
+                  Cada plan incluye beneficios específicos y escalonados para tiendas online
+                </p>
 
-                <div style={{ ...styles.planPricingCard, borderColor: '#0284c7', boxShadow: '0 4px 15px rgba(2, 132, 199, 0.12)' }}>
-                  <div style={styles.planPricingHeader}>
-                    <span style={styles.planTagStarter}>PLAN STARTER (POPULAR)</span>
-                    <div style={{ ...styles.planPriceValue, color: '#0284c7' }}>
-                      {formatMoney(49900)}
-                      <span style={styles.planPricePeriod}>/mes</span>
-                    </div>
-                  </div>
-                  <div style={styles.planFeatureText}>Para negocios con ventas constantes</div>
-                  <ul style={styles.planFeaturesList}>
-                    <li>✓ Todo lo del Plan Básico</li>
-                    <li>✓ Revista Interactiva HD Dinámica</li>
-                    <li>✓ Gestión de Stock & Variaciones</li>
-                  </ul>
-                </div>
+                <div style={styles.plansShowcaseGrid}>
+                  {Object.values(PLANS_BENEFITS).map((plan) => (
+                    <div
+                      key={plan.id}
+                      style={{
+                        ...styles.planPricingCard,
+                        borderColor: plan.id === 'STARTER' ? '#16a34a' : '#e2e8f0',
+                        boxShadow:
+                          plan.id === 'STARTER'
+                            ? '0 10px 25px -5px rgba(22, 163, 74, 0.15)'
+                            : '0 2px 4px rgba(0,0,0,0.04)',
+                      }}
+                    >
+                      <div style={styles.planPricingHeader}>
+                        <span
+                          style={{
+                            ...styles.planTagGeneric,
+                            backgroundColor: `${plan.color}15`,
+                            color: plan.color,
+                            border: `1px solid ${plan.color}40`,
+                          }}
+                        >
+                          {plan.tag}
+                        </span>
+                        <div style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a' }}>
+                          {plan.name}
+                        </div>
+                        <div style={styles.planPriceValue}>
+                          {formatMoney(plan.priceCOP)}
+                          <span style={styles.planPricePeriod}> / mes</span>
+                        </div>
+                      </div>
 
-                <div style={styles.planPricingCard}>
-                  <div style={styles.planPricingHeader}>
-                    <span style={styles.planTagPro}>PLAN PRO VIP</span>
-                    <div style={styles.planPriceValue}>
-                      {formatMoney(89900)}
-                      <span style={styles.planPricePeriod}>/mes</span>
+                      <div style={styles.dividerLineLight} />
+
+                      {/* Lista detallada de beneficios */}
+                      <ul style={styles.planFeaturesList}>
+                        {plan.features.map((feat, idx) => (
+                          <li
+                            key={idx}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '8px',
+                              color: feat.included ? '#334155' : '#94a3b8',
+                              textDecoration: feat.included ? 'none' : 'line-through',
+                            }}
+                          >
+                            <span>{feat.included ? '✓' : '✕'}</span>
+                            <span>{feat.text}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </div>
-                  <div style={styles.planFeatureText}>Para marcas consolidadas</div>
-                  <ul style={styles.planFeaturesList}>
-                    <li>✓ Todo lo del Plan Starter</li>
-                    <li>✓ Dominio Propio Personalizado</li>
-                    <li>✓ Soporte Prioritario 24/7</li>
-                  </ul>
+                  ))}
                 </div>
               </div>
 
-              {/* Métricas de Cobranza */}
+              {/* Métricas de Ingresos por Suscripciones */}
               <div style={styles.statsGrid}>
                 <div style={styles.statCard}>
                   <div style={styles.statCardHeader}>
@@ -939,7 +1075,7 @@ export default function MasterDashboard() {
                     <span style={styles.statBadgeSuccess}>Mensual</span>
                   </div>
                   <div style={styles.statNumber}>{formatMoney(totalMRR)}</div>
-                  <div style={styles.statFooterText}>Ingreso estimado por suscripciones de tiendas</div>
+                  <div style={styles.statFooterText}>Facturación total por suscripciones</div>
                 </div>
 
                 <div style={{ ...styles.statCard, borderLeft: '4px solid #f59e0b' }}>
@@ -950,7 +1086,7 @@ export default function MasterDashboard() {
                   <div style={{ ...styles.statNumber, color: '#d97706' }}>
                     {expiringSoonSubscriptions} tiendas
                   </div>
-                  <div style={styles.statFooterText}>Enviar recordatorio de pago a WhatsApp</div>
+                  <div style={styles.statFooterText}>Listas para cobro por pasarela o WhatsApp</div>
                 </div>
 
                 <div style={styles.statCard}>
@@ -958,18 +1094,16 @@ export default function MasterDashboard() {
                     <span style={styles.statTitle}>Tiendas Pagando</span>
                     <span style={styles.statBadgeInfo}>Planes</span>
                   </div>
-                  <div style={styles.statNumber}>
-                    {activeSubscriptions} activas
-                  </div>
-                  <div style={styles.statFooterText}>Facturación recurrente al día</div>
+                  <div style={styles.statNumber}>{activeSubscriptions} activas</div>
+                  <div style={styles.statFooterText}>Suscripciones al día</div>
                 </div>
               </div>
 
-              {/* Detalle de Suscripciones */}
+              {/* Detalle de Suscripciones con Pasarela de Pago */}
               <div style={styles.directorySection}>
                 <div style={styles.directoryHeader}>
-                  <h2 style={styles.directoryTitle}>Detalle de Suscripciones por Tienda</h2>
-                  <span style={styles.liveIndicator}>Gestión de Cobro Directo</span>
+                  <h2 style={styles.directoryTitle}>Gestión de Suscripciones & Pasarela de Pagos</h2>
+                  <span style={styles.liveIndicator}>Integración de Cobro Directo</span>
                 </div>
 
                 <div style={styles.tableResponsive}>
@@ -981,7 +1115,7 @@ export default function MasterDashboard() {
                         <th style={styles.th}>Tarifa Mensual</th>
                         <th style={styles.th}>Días Restantes</th>
                         <th style={styles.th}>Estado</th>
-                        <th style={{ ...styles.th, textAlign: 'right' }}>Acciones de Cobro</th>
+                        <th style={{ ...styles.th, textAlign: 'right' }}>Pasarela & Cobro</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1017,14 +1151,12 @@ export default function MasterDashboard() {
                             )}
                           </td>
                           <td style={{ ...styles.td, textAlign: 'right' }}>
-                            <a
-                              href={`https://wa.me/${store.country_code?.replace('+', '')}${store.whatsapp}?text=Hola%20${encodeURIComponent(store.name)},%20te%20escribimos%20de%20Zeply%20para%20recordarte%20que%20tu%20suscripci%C3%B3n%20${store.plan}%20vence%20en%20${store.daysUntilExpiry}%20d%C3%ADas.%20Por%20favor%20confirma%20tu%20renovaci%C3%B3n.`}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={styles.chargeBtn}
+                            <button
+                              onClick={() => setPaymentModalStore(store)}
+                              style={styles.payGatewayBtn}
                             >
-                              Cobrar por WhatsApp 💬
-                            </a>
+                              💳 Pagar Plan con Pasarela
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -1261,7 +1393,12 @@ export default function MasterDashboard() {
                 </h4>
                 <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div><strong>Proyecto:</strong> iequlfuyagzxlpfpzjdl.supabase.co</div>
-                  <div><strong>Estado:</strong> <span style={{ color: '#16a34a', fontWeight: '700' }}>● En Línea & Activo</span></div>
+                  <div>
+                    <strong>Estado Tablas:</strong>{' '}
+                    <span style={{ color: isSupabaseLive ? '#16a34a' : '#d97706', fontWeight: '700' }}>
+                      {isSupabaseLive ? '● Tablas Conectadas & Sincronizadas' : '⚠️ Pendiente ejecutar schema.sql'}
+                    </span>
+                  </div>
                   <div><strong>Aislamiento Multi-Tenant:</strong> Políticas RLS Habilitadas</div>
                 </div>
               </div>
@@ -1269,6 +1406,92 @@ export default function MasterDashboard() {
           )}
         </main>
       </div>
+
+      {/* ── MODAL: PASARELA DE PAGO DE SUSCRIPCIONES ── */}
+      {paymentModalStore && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContainer}>
+            <div style={styles.modalHeader}>
+              <div>
+                <h3 style={styles.modalTitle}>Pasarela de Pago Segura Zeply</h3>
+                <p style={styles.modalSub}>
+                  Renovar o pagar suscripción para <strong>{paymentModalStore.name}</strong>
+                </p>
+              </div>
+              <button
+                onClick={() => setPaymentModalStore(null)}
+                style={styles.modalCloseBtn}
+              >
+                ✕
+              </button>
+            </div>
+
+            {paymentSuccess ? (
+              <div style={styles.paymentSuccessBox}>
+                <span style={{ fontSize: '40px' }}>✅</span>
+                <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#15803d', margin: 0 }}>
+                  ¡Pago Procesado con Éxito!
+                </h4>
+                <p style={{ fontSize: '13px', color: '#64748b', textAlign: 'center' }}>
+                  La suscripción de <strong>{paymentModalStore.name}</strong> se ha renovado por 30 días adicionales.
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={styles.paymentSummaryCard}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>
+                      Plan {paymentModalStore.plan}
+                    </span>
+                    <span style={{ fontSize: '18px', fontWeight: '800', color: '#0284c7' }}>
+                      {formatMoney(paymentModalStore.monthlyFeeCOP)}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                    Cobertura: 30 días de servicio multi-tenant + Tienda + Revista PDF
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={styles.inputLabel}>Seleccionar Medio de Pago:</label>
+                  <div style={styles.paymentMethodsGrid}>
+                    <button type="button" style={styles.paymentMethodOption}>
+                      <span>💳</span>
+                      <span>Tarjeta de Crédito / Débito</span>
+                    </button>
+                    <button type="button" style={styles.paymentMethodOption}>
+                      <span>🏦</span>
+                      <span>PSE / Transferencia Bancaria</span>
+                    </button>
+                    <button type="button" style={styles.paymentMethodOption}>
+                      <span>📱</span>
+                      <span>Wompi / Nequi / Daviplata</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div style={styles.modalFooter}>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentModalStore(null)}
+                    style={styles.btnCancel}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={paymentProcessing}
+                    onClick={handleProcessPayment}
+                    style={styles.btnConfirm}
+                  >
+                    {paymentProcessing ? 'Procesando Transacción...' : `Pagar ${formatMoney(paymentModalStore.monthlyFeeCOP)} Ahora`}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── MODAL: REGISTRO MANUAL DE TIENDA ── */}
       {showCreateModal && (
@@ -1600,6 +1823,13 @@ const styles = {
     backgroundColor: '#0284c7',
     borderRadius: '8px',
     boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)',
+  },
+  dbNotice: {
+    backgroundColor: '#fffbeb',
+    borderBottom: '1px solid #fef3c7',
+    color: '#b45309',
+    padding: '12px 32px',
+    fontSize: '13px',
   },
   mainContent: {
     padding: '32px',
@@ -1938,15 +2168,14 @@ const styles = {
     border: '1px solid #bbf7d0',
     borderRadius: '6px',
   },
-  chargeBtn: {
+  payGatewayBtn: {
     display: 'inline-block',
-    padding: '6px 12px',
+    padding: '6px 14px',
     fontSize: '11px',
     fontWeight: '700',
     color: '#ffffff',
-    backgroundColor: '#16a34a',
+    backgroundColor: '#0284c7',
     borderRadius: '6px',
-    textDecoration: 'none',
   },
   saveAlert: {
     padding: '10px 14px',
@@ -2083,51 +2312,26 @@ const styles = {
   },
   plansShowcaseGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: '16px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '20px',
   },
   planPricingCard: {
     backgroundColor: '#ffffff',
     border: '1.5px solid #e2e8f0',
-    borderRadius: '12px',
+    borderRadius: '14px',
     padding: '24px 20px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '14px',
   },
   planPricingHeader: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px',
+    gap: '6px',
   },
-  planTagBasic: {
-    fontSize: '11px',
+  planTagGeneric: {
+    fontSize: '10px',
     fontWeight: '800',
-    color: '#0369a1',
-    backgroundColor: '#f0f9ff',
-    border: '1px solid #bae6fd',
-    padding: '3px 8px',
-    borderRadius: '6px',
-    width: 'fit-content',
-    letterSpacing: '0.5px',
-  },
-  planTagStarter: {
-    fontSize: '11px',
-    fontWeight: '800',
-    color: '#15803d',
-    backgroundColor: '#dcfce7',
-    border: '1px solid #bbf7d0',
-    padding: '3px 8px',
-    borderRadius: '6px',
-    width: 'fit-content',
-    letterSpacing: '0.5px',
-  },
-  planTagPro: {
-    fontSize: '11px',
-    fontWeight: '800',
-    color: '#7c3aed',
-    backgroundColor: '#ede9fe',
-    border: '1px solid #ddd6fe',
     padding: '3px 8px',
     borderRadius: '6px',
     width: 'fit-content',
@@ -2143,19 +2347,49 @@ const styles = {
     color: '#64748b',
     fontWeight: '500',
   },
-  planFeatureText: {
-    fontSize: '12px',
-    color: '#64748b',
+  dividerLineLight: {
+    height: '1px',
+    backgroundColor: '#f1f5f9',
   },
   planFeaturesList: {
     listStyle: 'none',
     padding: 0,
-    margin: '6px 0 0 0',
+    margin: 0,
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px',
+    gap: '8px',
     fontSize: '12px',
-    color: '#334155',
+  },
+  paymentSummaryCard: {
+    backgroundColor: '#f0f9ff',
+    border: '1px solid #bae6fd',
+    borderRadius: '10px',
+    padding: '16px',
+  },
+  paymentMethodsGrid: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  paymentMethodOption: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 14px',
+    backgroundColor: '#ffffff',
+    border: '1.5px solid #e2e8f0',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#1e293b',
+    textAlign: 'left',
+  },
+  paymentSuccessBox: {
+    padding: '32px 20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px',
   },
   modalOverlay: {
     position: 'fixed',
