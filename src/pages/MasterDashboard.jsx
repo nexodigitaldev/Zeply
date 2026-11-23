@@ -349,16 +349,18 @@ export default function MasterDashboard() {
     });
   };
 
-  const toggleStoreStatus = (id) => {
+  const toggleStoreStatus = async (id) => {
+    const currentStore = tenants.find((t) => t.id === id);
+    if (!currentStore) return;
+    const nextStatus = currentStore.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
     setTenants(
-      tenants.map((t) => {
-        if (t.id === id) {
-          const nextStatus = t.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-          return { ...t, status: nextStatus };
-        }
-        return t;
-      })
+      tenants.map((t) => (t.id === id ? { ...t, status: nextStatus } : t))
     );
+    try {
+      await supabase.from('tenants').update({ status: nextStatus }).eq('id', id);
+    } catch (err) {
+      console.warn('Update store error:', err);
+    }
   };
 
   const handleProcessPayment = () => {
