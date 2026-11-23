@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MasterLogin from './pages/MasterLogin';
 import MasterDashboard from './pages/MasterDashboard';
+import MagazineViewer from './pages/MagazineViewer';
 
 // Guardián de seguridad: Solo permite el acceso al Real Admin si tiene sesión válida
 function ProtectedAdminRoute({ children }) {
@@ -42,6 +43,10 @@ export default function App() {
             </ProtectedAdminRoute>
           }
         />
+
+        {/* Revista Digital Interactiva (Pública para clientes y tiendas) */}
+        <Route path="/revista/:slug" element={<MagazineViewer />} />
+        <Route path="/revista" element={<MagazineViewer />} />
 
         {/* Fallback de seguridad */}
         <Route path="*" element={<Navigate to="/rey-admin" replace />} />

@@ -67,8 +67,8 @@ export default function MasterLogin() {
         {/* Brand Header */}
         <div style={styles.header}>
           <div style={styles.brandTitle}>Zeply</div>
-          <h1 style={styles.title}>Real Admin</h1>
-          <p style={styles.subtitle}>Panel Exclusivo de Control Central</p>
+          <h1 style={styles.title}>Master Admin</h1>
+          <p style={styles.subtitle}>Panel Exclusivo de Control Central • Otto Donado</p>
         </div>
 
         {/* Error Alert */}

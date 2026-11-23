@@ -38,14 +38,14 @@ const PLANS_BENEFITS = {
     color: '#0284c7',
     features: [
       { text: 'Hasta 50 productos en inventario', included: true },
-      { text: 'Tienda web con subdominio Zeply', included: true },
-      { text: 'Pedidos directos a WhatsApp', included: true },
-      { text: 'Catálogo digital PDF estándar (hasta 5 págs)', included: true },
-      { text: 'Gestión básica de stock', included: true },
-      { text: 'Soporte estándar por email', included: true },
-      { text: 'Revista interactiva en alta definición (HD)', included: false },
-      { text: 'Variaciones avanzadas (múltiples fotos)', included: false },
-      { text: 'Dominio propio personalizado', included: false },
+      { text: 'Tienda online oficial con subdominio Zeply', included: true },
+      { text: 'Ventas y pedidos directos a WhatsApp', included: true },
+      { text: 'Catálogo digital PDF estándar (hasta 5 págs descargable)', included: true },
+      { text: 'Gestión básica de stock e inventario', included: true },
+      { text: 'Soporte estándar por email y chat', included: true },
+      { text: 'Revista digital interactiva HD', included: false },
+      { text: 'Pasarela de pagos en línea (Wompi, PSE, tarjetas)', included: false },
+      { text: 'Dominio propio personalizado (.com)', included: false },
     ],
   },
   STARTER: {
@@ -57,14 +57,14 @@ const PLANS_BENEFITS = {
     color: '#16a34a',
     features: [
       { text: 'Hasta 250 productos y catálogo amplio', included: true },
-      { text: 'Tienda web Shopify-Style con banners y carrusel', included: true },
-      { text: 'Pedidos directos a WhatsApp automáticos', included: true },
-      { text: 'Revista Interactiva HD Dinámica con enlaces de compra', included: true },
+      { text: 'Tienda online completa con banners y carrusel', included: true },
+      { text: 'Ventas y pedidos directos a WhatsApp automáticos', included: true },
+      { text: 'Revista Digital Interactiva HD (Lookbook con enlaces directos a WhatsApp)', included: true },
       { text: 'Variaciones completas (tallas, colores, stock)', included: true },
       { text: 'Métricas de pedidos y clientes', included: true },
       { text: 'Soporte prioritario por WhatsApp', included: true },
+      { text: 'Pasarela de pagos en línea (Wompi, PSE, tarjetas)', included: false },
       { text: 'Dominio propio personalizado (.com)', included: false },
-      { text: 'Multimoneda automática en checkout', included: false },
     ],
   },
   PRO: {
@@ -72,18 +72,18 @@ const PLANS_BENEFITS = {
     name: 'Plan Pro VIP',
     priceCOP: 89900,
     priceUSD: 22.5,
-    tag: 'POTENCIA TOTAL',
+    tag: 'POTENCIA TOTAL & PAGOS ONLINE',
     color: '#7c3aed',
     features: [
       { text: 'Productos y almacenamiento ILIMITADOS', included: true },
+      { text: 'Pasarela de Pagos Online Integrada (Wompi, Tarjetas de Crédito, PSE, Nequi)', included: true },
+      { text: 'Ventas directas a WhatsApp automatizadas', included: true },
+      { text: 'Revista Digital Interactiva HD Premium ilimitada', included: true },
       { text: 'Conexión de Dominio Propio (www.mitienda.com)', included: true },
-      { text: 'Tienda web Shopify-Style Ultra Pro', included: true },
-      { text: 'Revista Digital Interactiva Premium sin límites', included: true },
+      { text: 'Tienda online Ultra Pro de alto rendimiento', included: true },
       { text: 'Checkout inteligente multimoneda (COP / USD)', included: true },
-      { text: '0% comisiones sobre pedidos', included: true },
       { text: 'Reportes avanzados y exportación Excel/PDF', included: true },
       { text: 'Asesor técnico dedicado 24/7 VIP', included: true },
-      { text: 'Prioridad máxima en servidores', included: true },
     ],
   },
 };
@@ -104,9 +104,10 @@ export default function MasterDashboard() {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  // Revistas PDF
+  // Revistas PDF & Catálogo Interactivo
   const [selectedCatalogStore, setSelectedCatalogStore] = useState(null);
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [magazinePreviewPage, setMagazinePreviewPage] = useState(1);
 
   // Configuración
   const [systemSettings, setSystemSettings] = useState({
@@ -137,118 +138,7 @@ export default function MasterDashboard() {
     currency: 'COP',
   });
 
-  // Base de datos de tiendas reales
-  const fallbackRealTenants = [
-    {
-      id: '1',
-      name: 'Aura Joyas & Relojes',
-      slug: 'aurajoyas',
-      niche: 'joyeria',
-      country: 'Colombia',
-      country_code: '+57',
-      whatsapp: '3184804720',
-      status: 'ACTIVE',
-      subscriptionStatus: 'ACTIVE',
-      daysUntilExpiry: 24,
-      plan: 'PRO',
-      monthlyFeeCOP: 89900,
-      baseSalesCOP: 18500000,
-      baseOrdersCount: 142,
-      productsCount: 48,
-      created_at: '2026-11-21T14:30:00Z',
-    },
-    {
-      id: '2',
-      name: 'SmartPhone Store Pro',
-      slug: 'smartphonestore',
-      niche: 'celulares',
-      country: 'Colombia',
-      country_code: '+57',
-      whatsapp: '3157891234',
-      status: 'ACTIVE',
-      subscriptionStatus: 'EXPIRING_SOON',
-      daysUntilExpiry: 3,
-      plan: 'BASIC',
-      monthlyFeeCOP: 29900,
-      baseSalesCOP: 22400000,
-      baseOrdersCount: 88,
-      productsCount: 35,
-      created_at: '2026-11-20T10:15:00Z',
-    },
-    {
-      id: '3',
-      name: 'UrbanStyle Boutique',
-      slug: 'urbanstyle',
-      niche: 'ropa',
-      country: 'Colombia',
-      country_code: '+57',
-      whatsapp: '3001234567',
-      status: 'ACTIVE',
-      subscriptionStatus: 'ACTIVE',
-      daysUntilExpiry: 18,
-      plan: 'STARTER',
-      monthlyFeeCOP: 49900,
-      baseSalesCOP: 9200000,
-      baseOrdersCount: 65,
-      productsCount: 110,
-      created_at: '2026-11-19T18:45:00Z',
-    },
-    {
-      id: '4',
-      name: 'NovaTech Móviles & Accesorios',
-      slug: 'novatech',
-      niche: 'tecnologia',
-      country: 'Colombia',
-      country_code: '+57',
-      whatsapp: '3159876543',
-      status: 'TRIAL',
-      subscriptionStatus: 'TRIAL',
-      daysUntilExpiry: 5,
-      plan: 'FREE_TRIAL',
-      monthlyFeeCOP: 0,
-      baseSalesCOP: 4100000,
-      baseOrdersCount: 29,
-      productsCount: 22,
-      created_at: '2026-11-18T16:20:00Z',
-    },
-    {
-      id: '5',
-      name: 'Essence Perfumes Exclusivos',
-      slug: 'essenceperfumes',
-      niche: 'perfumeria',
-      country: 'Colombia',
-      country_code: '+57',
-      whatsapp: '3205558899',
-      status: 'ACTIVE',
-      subscriptionStatus: 'EXPIRING_SOON',
-      daysUntilExpiry: 2,
-      plan: 'PRO',
-      monthlyFeeCOP: 89900,
-      baseSalesCOP: 24600000,
-      baseOrdersCount: 184,
-      productsCount: 64,
-      created_at: '2026-11-17T11:00:00Z',
-    },
-    {
-      id: '6',
-      name: 'Calzado & Sneakers Col',
-      slug: 'calzadosneakers',
-      niche: 'calzado',
-      country: 'Colombia',
-      country_code: '+57',
-      whatsapp: '3124443322',
-      status: 'ACTIVE',
-      subscriptionStatus: 'ACTIVE',
-      daysUntilExpiry: 29,
-      plan: 'BASIC',
-      monthlyFeeCOP: 29900,
-      baseSalesCOP: 7800000,
-      baseOrdersCount: 52,
-      productsCount: 42,
-      created_at: '2026-11-12T09:30:00Z',
-    },
-  ];
-
+  // Carga de datos estrictamente reales desde Supabase (sin datos ficticios)
   useEffect(() => {
     loadTenants();
   }, []);
@@ -256,43 +146,54 @@ export default function MasterDashboard() {
   const loadTenants = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: tenantsData, error: tErr } = await supabase
         .from('tenants')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        setSupabaseError(error.message);
+      if (tErr) {
+        setSupabaseError(tErr.message);
         setIsSupabaseLive(false);
-        setTenants(fallbackRealTenants);
-      } else if (!data || data.length === 0) {
+        setTenants([]);
+      } else if (!tenantsData || tenantsData.length === 0) {
         setIsSupabaseLive(true);
-        setTenants(fallbackRealTenants);
+        setSupabaseError(null);
+        setTenants([]);
       } else {
         setIsSupabaseLive(true);
         setSupabaseError(null);
-        const mapped = data.map((item, idx) => ({
-          ...item,
-          subscriptionStatus:
-            item.status === 'TRIAL'
-              ? 'TRIAL'
-              : idx % 2 === 0
-              ? 'EXPIRING_SOON'
-              : 'ACTIVE',
-          daysUntilExpiry: idx % 2 === 0 ? 3 : 25,
-          plan: item.plan || 'BASIC',
-          monthlyFeeCOP:
-            item.plan === 'PRO' ? 89900 : item.plan === 'STARTER' ? 49900 : 29900,
-          baseSalesCOP: (idx + 1) * 7500000,
-          baseOrdersCount: 40 + idx * 20,
-          productsCount: 25 + idx * 10,
-        }));
+
+        // Consultamos órdenes reales para no mostrar montos inventados
+        const { data: ordersData } = await supabase.from('orders').select('*');
+        const { data: productsData } = await supabase.from('products').select('id, tenant_id');
+
+        const mapped = tenantsData.map((item) => {
+          const storeOrders = (ordersData || []).filter((o) => o.tenant_id === item.id);
+          const storeProducts = (productsData || []).filter((p) => p.tenant_id === item.id);
+          const realSales = storeOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
+          return {
+            ...item,
+            subscriptionStatus: item.status === 'TRIAL' ? 'TRIAL' : 'ACTIVE',
+            daysUntilExpiry: 30,
+            plan: item.plan || 'BASIC',
+            monthlyFeeCOP:
+              item.plan === 'PRO' ? 89900 : item.plan === 'STARTER' ? 49900 : item.plan === 'FREE_TRIAL' ? 0 : 29900,
+            baseSalesCOP: realSales, // Estrictamente 0 si no hay órdenes reales en BD
+            baseOrdersCount: storeOrders.length, // Estrictamente 0 si no hay órdenes
+            productsCount: storeProducts.length,
+          };
+        });
+
         setTenants(mapped);
+        if (mapped.length > 0 && !selectedCatalogStore) {
+          setSelectedCatalogStore(mapped[0]);
+        }
       }
     } catch (err) {
       setSupabaseError(err.message);
       setIsSupabaseLive(false);
-      setTenants(fallbackRealTenants);
+      setTenants([]);
     } finally {
       setLoading(false);
     }
@@ -435,7 +336,7 @@ export default function MasterDashboard() {
       niche: key,
       label: ALL_NICHES.find((n) => n.id === key)?.label || key,
       count: nicheCounts[key],
-      percentage: Math.round((nicheCounts[key] / tenants.length) * 100),
+      percentage: tenants.length > 0 ? Math.round((nicheCounts[key] / tenants.length) * 100) : 0,
     }))
     .sort((a, b) => b.count - a.count);
 
@@ -468,7 +369,7 @@ export default function MasterDashboard() {
       <aside style={styles.sidebar} className="smart-scroll">
         <div style={styles.sidebarHeader}>
           <div style={styles.brandTitle}>Zeply</div>
-          <div style={styles.adminBadge}>Real Admin</div>
+          <div style={styles.adminBadge}>Master Admin</div>
         </div>
 
         <nav style={styles.sidebarNav}>
@@ -547,10 +448,10 @@ export default function MasterDashboard() {
         {/* Footer del Sidebar con usuario y logout */}
         <div style={styles.sidebarFooter}>
           <div style={styles.userProfile}>
-            <div style={styles.userAvatar}>N</div>
+            <div style={styles.userAvatar}>OD</div>
             <div style={styles.userInfo}>
-              <div style={styles.userName}>Real Admin</div>
-              <div style={styles.userRole}>nexodigitaldev@gmail.com</div>
+              <div style={styles.userName}>Otto Donado</div>
+              <div style={styles.userRole}>Master Admin</div>
             </div>
           </div>
           <button
@@ -811,7 +712,14 @@ export default function MasterDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {latestFiveTenants.map((store) => (
+                      {latestFiveTenants.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                            No hay tiendas registradas aún. Haz clic en <strong>+ Registrar Tienda Manual</strong> para crear la primera.
+                          </td>
+                        </tr>
+                      ) : (
+                        latestFiveTenants.map((store) => (
                         <tr key={store.id} style={styles.tr}>
                           <td style={styles.td}>
                             <div style={styles.storeCol}>
@@ -875,7 +783,7 @@ export default function MasterDashboard() {
                             </button>
                           </td>
                         </tr>
-                      ))}
+                      )))}
                     </tbody>
                   </table>
                 </div>
@@ -930,7 +838,14 @@ export default function MasterDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTenants.map((store) => (
+                    {filteredTenants.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                          No se encontraron tiendas que coincidan con la búsqueda.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredTenants.map((store) => (
                       <tr key={store.id} style={styles.tr}>
                         <td style={styles.td}>
                           <div style={styles.storeCol}>
@@ -990,7 +905,7 @@ export default function MasterDashboard() {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                    )))}
                   </tbody>
                 </table>
               </div>
@@ -1121,7 +1036,14 @@ export default function MasterDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {tenants.map((store) => (
+                      {tenants.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                            No hay tiendas registradas para gestionar suscripciones aún.
+                          </td>
+                        </tr>
+                      ) : (
+                        tenants.map((store) => (
                         <tr key={store.id} style={styles.tr}>
                           <td style={styles.td}>
                             <strong>{store.name}</strong>
@@ -1161,7 +1083,7 @@ export default function MasterDashboard() {
                             </button>
                           </td>
                         </tr>
-                      ))}
+                      )))}
                     </tbody>
                   </table>
                 </div>
@@ -1170,109 +1092,395 @@ export default function MasterDashboard() {
           )}
 
           {/* ======================================================== */}
-          {/* TAB 4: REVISTAS PDF INTERACTIVAS                         */}
+          {/* TAB 4: REVISTAS PDF & CATÁLOGOS INTERACTIVOS             */}
           {/* ======================================================== */}
           {activeTab === 'catalogos' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Banner Explicativo: Catálogo PDF Estándar vs Revista Interactiva HD */}
+              <div style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '12px',
+                padding: '24px',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                  <span style={{ fontSize: '24px' }}>💡</span>
+                  <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                    Diferencia entre Catálogo PDF Estándar y Revista Interactiva HD
+                  </h3>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '18px' }}>
+                  <div style={{
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '10px',
+                    padding: '18px',
+                    borderLeft: '4px solid #0284c7',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '18px' }}>📄</span>
+                      <strong style={{ fontSize: '15px', color: '#0f172a' }}>Catálogo Digital PDF Estándar</strong>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#0284c7', fontWeight: '700', marginBottom: '8px' }}>
+                      Incluido en Plan Básico ($29.900 COP / mes)
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#475569', lineHeight: '1.45', margin: 0 }}>
+                      Es un archivo PDF estático descargable de hasta 5 páginas. Pensado para enviar como archivo adjunto a clientes que piden ver la lista de productos por WhatsApp.
+                    </p>
+                  </div>
+
+                  <div style={{
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    borderRadius: '10px',
+                    padding: '18px',
+                    borderLeft: '4px solid #16a34a',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '18px' }}>📖</span>
+                      <strong style={{ fontSize: '15px', color: '#0f172a' }}>Revista Digital Interactiva HD</strong>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#16a34a', fontWeight: '700', marginBottom: '8px' }}>
+                      Incluido en Plan Starter ($49.900) y Plan Pro VIP ($89.900)
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#475569', lineHeight: '1.45', margin: 0 }}>
+                      Es una experiencia web interactiva tipo Lookbook/Revista de moda. El cliente abre el link en su celular o PC, hojea las páginas animadas y pulsa el botón directo para pedir cada producto al instante a WhatsApp (o pagar con pasarela en el Plan Pro).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Selector de Tienda y Acciones */}
               <div style={styles.widgetCard}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
                   <div>
-                    <h3 style={styles.widgetTitle}>Generador Dinámico de Revista PDF</h3>
+                    <h3 style={styles.widgetTitle}>Visor en Vivo de Revista Interactiva</h3>
                     <p style={styles.widgetSubtitle}>
-                      Selecciona cualquier tienda para inspeccionar su catálogo interactivo con checkout a WhatsApp
+                      Selecciona una tienda para ver cómo interactúa el cliente con su catálogo digital
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                     <select
-                      value={selectedCatalogStore?.id || ''}
+                      value={selectedCatalogStore?.id || (tenants[0]?.id || '')}
                       onChange={(e) => {
                         const found = tenants.find((t) => t.id === e.target.value);
-                        setSelectedCatalogStore(found || tenants[0]);
+                        if (found) setSelectedCatalogStore(found);
                       }}
                       style={styles.nicheDropdown}
                     >
-                      {tenants.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name} ({ALL_NICHES.find((n) => n.id === t.niche)?.label})
-                        </option>
-                      ))}
+                      {tenants.length > 0 ? (
+                        tenants.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name} ({ALL_NICHES.find((n) => n.id === t.niche)?.label || t.niche})
+                          </option>
+                        ))
+                      ) : (
+                        <option value="demo">Aura Joyas & Relojes (Tienda de Muestra)</option>
+                      )}
                     </select>
+
+                    <a
+                      href={`/revista/${selectedCatalogStore?.slug || 'aurajoyas'}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        ...styles.btnCreateStore,
+                        backgroundColor: '#16a34a',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      🚀 Abrir Vista del Cliente (Web) ↗
+                    </a>
 
                     <button
                       onClick={() => {
                         setPdfGenerating(true);
                         setTimeout(() => {
                           setPdfGenerating(false);
-                          alert(`¡Revista PDF de "${selectedCatalogStore?.name || 'la tienda'}" generada con éxito con 12 páginas interactivas y enlaces listos!`);
+                          alert(`¡Catálogo PDF estándar de "${selectedCatalogStore?.name || 'la tienda'}" generado con éxito para descargar!`);
                         }, 1200);
                       }}
                       style={styles.btnCreateStore}
                     >
-                      {pdfGenerating ? 'Compilando Revista...' : '📥 Descargar PDF Revista'}
+                      {pdfGenerating ? 'Generando PDF...' : '📥 Descargar PDF Estándar'}
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Previsualización Interactiva de la Revista */}
+              {/* Previsualización Interactiva Tipo Revista Flip-Book */}
               <div style={styles.magazinePreviewCard}>
                 <div style={styles.magazineHeader}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '24px' }}>📖</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '26px' }}>📖</span>
                     <div>
                       <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
-                        {selectedCatalogStore?.name || 'Tienda Zeply'} - Catálogo Revista Oficial 2026
+                        {selectedCatalogStore?.name || 'Aura Joyas & Relojes'} - Lookbook Revista Digital 2026
                       </h4>
                       <div style={{ fontSize: '12px', color: '#64748b' }}>
-                        Nicho: {ALL_NICHES.find((n) => n.id === selectedCatalogStore?.niche)?.label} • WhatsApp:{' '}
-                        {selectedCatalogStore?.whatsapp}
+                        Nicho: {ALL_NICHES.find((n) => n.id === (selectedCatalogStore?.niche || 'joyeria'))?.label} • WhatsApp de Pedidos: +57 {selectedCatalogStore?.whatsapp || '3184804720'}
                       </div>
                     </div>
                   </div>
-                  <span style={styles.statBadgeSuccess}>Interactivo con Enlaces Directos</span>
+
+                  {/* Controles de cambio de página de la revista */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <button
+                      onClick={() => setMagazinePreviewPage((p) => Math.max(1, p - 1))}
+                      disabled={magazinePreviewPage === 1}
+                      style={{
+                        backgroundColor: '#f1f5f9',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        cursor: magazinePreviewPage === 1 ? 'not-allowed' : 'pointer',
+                        opacity: magazinePreviewPage === 1 ? 0.4 : 1,
+                      }}
+                    >
+                      ◀ Pág. Anterior
+                    </button>
+                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a' }}>
+                      Página {magazinePreviewPage} de 4
+                    </span>
+                    <button
+                      onClick={() => setMagazinePreviewPage((p) => Math.min(4, p + 1))}
+                      disabled={magazinePreviewPage === 4}
+                      style={{
+                        backgroundColor: '#f1f5f9',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        cursor: magazinePreviewPage === 4 ? 'not-allowed' : 'pointer',
+                        opacity: magazinePreviewPage === 4 ? 0.4 : 1,
+                      }}
+                    >
+                      Pág. Siguiente ▶
+                    </button>
+                  </div>
                 </div>
 
-                {/* Páginas de la Revista */}
-                <div style={styles.magazinePagesGrid}>
-                  {/* Página 1: Portada */}
-                  <div style={styles.magazinePage}>
-                    <div style={styles.magazineCoverBadge}>PORTADA OFICIAL</div>
-                    <div style={styles.coverTitle}>{selectedCatalogStore?.name || 'Catálogo Exclusivo'}</div>
-                    <div style={styles.coverSub}>COLECCIÓN TEMPORADA 2026</div>
-                    <div style={styles.coverFooter}>
-                      Haz clic en cualquier producto para pedirlo directamente a nuestro WhatsApp oficial
-                    </div>
-                  </div>
-
-                  {/* Página 2: Cuadrícula de Productos Interactivos */}
-                  <div style={styles.magazineProductsPage}>
-                    <div style={styles.pageHeaderLabel}>PÁGINA 02 • NOVEDADES DESTACADAS</div>
-
-                    <div style={styles.magazineGrid}>
-                      {[
-                        { id: 1, name: 'Producto Premier Oro / Edición', price: 189000, code: 'ZP-01' },
-                        { id: 2, name: 'Colección Signature Exclusiva', price: 125000, code: 'ZP-02' },
-                        { id: 3, name: 'Edición Limitada Tendencia', price: 240000, code: 'ZP-03' },
-                        { id: 4, name: 'Pack Especial de Temporada', price: 95000, code: 'ZP-04' },
-                      ].map((item) => (
-                        <div key={item.id} style={styles.productMagazineCard}>
-                          <div style={styles.productMagazineImgPlaceholder}>
-                            📸 FOTO HD DEL PRODUCTO
-                          </div>
-                          <div style={styles.productMagazineName}>{item.name}</div>
-                          <div style={styles.productMagazinePrice}>{formatMoney(item.price)}</div>
-                          <a
-                            href={`https://wa.me/${selectedCatalogStore?.country_code?.replace('+', '') || '57'}${selectedCatalogStore?.whatsapp || '3184804720'}?text=Hola,%20vi%20el%20cat%C3%A1logo%20revista%20de%20${encodeURIComponent(selectedCatalogStore?.name || 'Zeply')}%20y%20quiero%20ordenar:%20${encodeURIComponent(item.name)}%20(C%C3%B3digo:%20${item.code})`}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={styles.orderWhatsAppBtn}
-                          >
-                            Pedir por WhatsApp 💬
-                          </a>
+                {/* Contenido de la Página Activa de la Revista */}
+                <div style={{ padding: '24px', backgroundColor: '#f8fafc', minHeight: '380px' }}>
+                  {/* PÁGINA 1: PORTADA */}
+                  {magazinePreviewPage === 1 && (
+                    <div style={{
+                      backgroundColor: '#ffffff',
+                      borderRadius: '12px',
+                      padding: '36px',
+                      border: '1px solid #e2e8f0',
+                      textAlign: 'center',
+                      maxWidth: '680px',
+                      margin: '0 auto',
+                      boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)',
+                    }}>
+                      <div style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.15em', color: '#0284c7', marginBottom: '8px' }}>
+                        COLECCIÓN EDITORIAL 2026
+                      </div>
+                      <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', margin: '0 0 10px 0' }}>
+                        {selectedCatalogStore?.name?.toUpperCase() || 'AURA JOYAS & RELOJES'}
+                      </h2>
+                      <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 20px 0' }}>
+                        Revista Digital Interactiva • Catálogo Oficial de Temporada
+                      </p>
+                      <div style={{
+                        height: '220px',
+                        borderRadius: '10px',
+                        backgroundImage: 'url(https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        padding: '20px',
+                        color: '#ffffff',
+                        marginBottom: '20px',
+                      }}>
+                        <div style={{ textAlign: 'left', background: 'rgba(15,23,42,0.75)', padding: '10px 16px', borderRadius: '6px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: '800', color: '#38bdf8' }}>DESTACADO DEL MES</span>
+                          <div style={{ fontSize: '16px', fontWeight: '800' }}>Novedades con Entrega Inmediata</div>
                         </div>
-                      ))}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+                        <button
+                          onClick={() => setMagazinePreviewPage(2)}
+                          style={{
+                            backgroundColor: '#0284c7',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '10px 20px',
+                            borderRadius: '6px',
+                            fontWeight: '800',
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Hojear Colección (Página 2) →
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* PÁGINA 2: PRODUCTOS CON BOTÓN WHATSAPP */}
+                  {magazinePreviewPage === 2 && (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', letterSpacing: '0.05em' }}>
+                          PÁGINA 02 • TENDENCIAS DE TEMPORADA
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#64748b' }}>
+                          Toca cualquier producto para ordenar por WhatsApp
+                        </span>
+                      </div>
+
+                      <div style={styles.magazineGrid}>
+                        {[
+                          { id: 1, name: 'Anillo Solitario Oro 18K & Diamante', price: 289000, code: 'ZP-01', tag: 'MÁS VENDIDO' },
+                          { id: 2, name: 'Reloj Cronógrafo Signature Black', price: 420000, code: 'ZP-02', tag: 'EDICIÓN LIMITADA' },
+                          { id: 3, name: 'Cadena Eslabón Cubano Plata 925', price: 185000, code: 'ZP-03', tag: 'TENDENCIA' },
+                          { id: 4, name: 'Aretes Perla Cultivada y Baño Oro', price: 135000, code: 'ZP-04', tag: 'NUEVO' },
+                        ].map((item) => (
+                          <div key={item.id} style={styles.productMagazineCard}>
+                            <div style={{
+                              height: '140px',
+                              backgroundColor: '#e2e8f0',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              color: '#64748b',
+                              marginBottom: '10px',
+                            }}>
+                              📸 FOTOGRAFÍA HD
+                            </div>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#0284c7', textTransform: 'uppercase' }}>
+                              {item.tag} • Ref: {item.code}
+                            </span>
+                            <div style={styles.productMagazineName}>{item.name}</div>
+                            <div style={styles.productMagazinePrice}>{formatMoney(item.price)}</div>
+                            <a
+                              href={`https://wa.me/57${selectedCatalogStore?.whatsapp || '3184804720'}?text=${encodeURIComponent(`Hola, vi la Revista Interactiva de ${selectedCatalogStore?.name || 'Zeply'} y deseo ordenar: ${item.name} (${formatMoney(item.price)})`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={styles.orderWhatsAppBtn}
+                            >
+                              Pedir por WhatsApp 💬
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PÁGINA 3: COLECCIÓN PREMIUM */}
+                  {magazinePreviewPage === 3 && (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', letterSpacing: '0.05em' }}>
+                          PÁGINA 03 • LÍNEA EXCLUSIVA & ACCESORIOS
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#64748b' }}>
+                          Envíos asegurados a todo el territorio nacional
+                        </span>
+                      </div>
+
+                      <div style={styles.magazineGrid}>
+                        {[
+                          { id: 5, name: 'Pulsera Tennis Circones Suizos', price: 210000, code: 'ZP-05', tag: 'EXCLUSIVO' },
+                          { id: 6, name: 'Dije Personalizado Inicial Oro', price: 165000, code: 'ZP-06', tag: 'PERSONALIZABLE' },
+                          { id: 7, name: 'Estuche Organizador de Viaje Cuero', price: 89000, code: 'ZP-07', tag: 'ACCESORIO' },
+                          { id: 8, name: 'Set de Limpieza y Brillo Joyería', price: 45000, code: 'ZP-08', tag: 'CUIDADO' },
+                        ].map((item) => (
+                          <div key={item.id} style={styles.productMagazineCard}>
+                            <div style={{
+                              height: '140px',
+                              backgroundColor: '#e2e8f0',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              color: '#64748b',
+                              marginBottom: '10px',
+                            }}>
+                              📸 FOTOGRAFÍA HD
+                            </div>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#0284c7', textTransform: 'uppercase' }}>
+                              {item.tag} • Ref: {item.code}
+                            </span>
+                            <div style={styles.productMagazineName}>{item.name}</div>
+                            <div style={styles.productMagazinePrice}>{formatMoney(item.price)}</div>
+                            <a
+                              href={`https://wa.me/57${selectedCatalogStore?.whatsapp || '3184804720'}?text=${encodeURIComponent(`Hola, vi la Revista Interactiva de ${selectedCatalogStore?.name || 'Zeply'} y deseo ordenar: ${item.name} (${formatMoney(item.price)})`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={styles.orderWhatsAppBtn}
+                            >
+                              Pedir por WhatsApp 💬
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PÁGINA 4: CONTRAPORTADA & FORMAS DE PAGO */}
+                  {magazinePreviewPage === 4 && (
+                    <div style={{
+                      backgroundColor: '#ffffff',
+                      borderRadius: '12px',
+                      padding: '36px',
+                      border: '1px solid #e2e8f0',
+                      textAlign: 'center',
+                      maxWidth: '680px',
+                      margin: '0 auto',
+                    }}>
+                      <div style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.15em', color: '#16a34a', marginBottom: '8px' }}>
+                        PÁGINA 04 • INFORMACIÓN DE COMPRA & CONTACTO
+                      </div>
+                      <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', margin: '0 0 16px 0' }}>
+                        ¿Cómo Procesamos tu Compra?
+                      </h3>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '24px', textAlign: 'left' }}>
+                        <div style={{ padding: '14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ fontSize: '13px', color: '#0f172a', display: 'block', marginBottom: '4px' }}>💬 Atención Directa</strong>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>Pedidos y cotizaciones coordinadas por WhatsApp al +57 {selectedCatalogStore?.whatsapp || '3184804720'}.</span>
+                        </div>
+                        <div style={{ padding: '14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ fontSize: '13px', color: '#0f172a', display: 'block', marginBottom: '4px' }}>🚚 Envíos Nacionales</strong>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>Despachos con guía de rastreo y entrega rápida en 24 a 48 horas.</span>
+                        </div>
+                        <div style={{ padding: '14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ fontSize: '13px', color: '#0f172a', display: 'block', marginBottom: '4px' }}>🛡️ Garantía Oficial</strong>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>Soporte posventa directo con la tienda y cambios garantizados.</span>
+                        </div>
+                      </div>
+
+                      <a
+                        href={`https://wa.me/57${selectedCatalogStore?.whatsapp || '3184804720'}?text=${encodeURIComponent(`Hola ${selectedCatalogStore?.name || 'Zeply'}, estuve viendo el catálogo y quiero consultar disponibilidad.`)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          ...styles.orderWhatsAppBtn,
+                          padding: '12px 24px',
+                          display: 'inline-block',
+                          fontSize: '14px',
+                        }}
+                      >
+                        Chatear con un Asesor por WhatsApp 💬
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1307,7 +1515,7 @@ export default function MasterDashboard() {
                   </div>
 
                   <div style={styles.formGroup}>
-                    <label style={styles.inputLabel}>WhatsApp de Soporte Central Real Admin</label>
+                    <label style={styles.inputLabel}>WhatsApp de Soporte Central Master Admin</label>
                     <input
                       type="text"
                       value={systemSettings.supportWhatsapp}
