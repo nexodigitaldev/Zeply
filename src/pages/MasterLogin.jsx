@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+// Credenciales Maestras Blindadas para Real Admin
+const MASTER_ADMIN_EMAIL = 'nexodigitaldev@gmail.com';
+const MASTER_ADMIN_PASS = 'tuiT(346XXA#HYX@';
+
 export default function MasterLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -15,30 +19,42 @@ export default function MasterLogin() {
     setErrorMessage('');
     setLoading(true);
 
-    try {
-      if (!email || !password) {
-        throw new Error('Por favor ingresa correo y contraseña.');
-      }
+    const inputEmail = email.trim().toLowerCase();
+    const inputPass = password.trim();
 
+    // 1. Blindaje estricto: Validación de credenciales únicas maestras
+    if (inputEmail !== MASTER_ADMIN_EMAIL.toLowerCase() || inputPass !== MASTER_ADMIN_PASS) {
+      setErrorMessage('Acceso denegado. Credenciales de Real Admin no autorizadas.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // 2. Autenticación contra Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: MASTER_ADMIN_EMAIL,
+        password: MASTER_ADMIN_PASS,
       });
 
       if (error) {
-        // En caso de que el usuario no exista aún en Supabase Auth, permitimos validar
-        console.warn('Supabase Auth Notice:', error.message);
-        // Si el usuario ingresa sus credenciales admin, guardamos sesión y navegamos
-        sessionStorage.setItem('zeply_admin_user', email);
-        navigate('/rey-admin/dashboard');
-        return;
+        console.warn('Supabase session fallback:', error.message);
       }
 
-      sessionStorage.setItem('zeply_admin_user', data.user.email);
+      // 3. Establecer sesión autorizada de Real Admin
+      localStorage.setItem('zeply_master_admin_session', JSON.stringify({
+        email: MASTER_ADMIN_EMAIL,
+        role: 'REAL_ADMIN',
+        loginAt: new Date().toISOString(),
+      }));
+
       navigate('/rey-admin/dashboard');
     } catch (err) {
-      // Fallback seguro de sesión
-      sessionStorage.setItem('zeply_admin_user', email);
+      // Si la red falla pero las credenciales son las correctas maestras, se autoriza
+      localStorage.setItem('zeply_master_admin_session', JSON.stringify({
+        email: MASTER_ADMIN_EMAIL,
+        role: 'REAL_ADMIN',
+        loginAt: new Date().toISOString(),
+      }));
       navigate('/rey-admin/dashboard');
     } finally {
       setLoading(false);
@@ -48,27 +64,27 @@ export default function MasterLogin() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        {/* Brand Header: Zeply limpio sin coronas */}
+        {/* Brand Header */}
         <div style={styles.header}>
           <div style={styles.brandTitle}>Zeply</div>
           <h1 style={styles.title}>Real Admin</h1>
-          <p style={styles.subtitle}>Inicia sesión para gestionar la plataforma</p>
+          <p style={styles.subtitle}>Panel Exclusivo de Control Central</p>
         </div>
 
         {/* Error Alert */}
         {errorMessage && (
           <div style={styles.errorAlert}>
-            <span>{errorMessage}</span>
+            <span>⚠️ {errorMessage}</span>
           </div>
         )}
 
         {/* Formulario */}
         <form onSubmit={handleLogin} style={styles.form}>
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Correo Electrónico</label>
+            <label style={styles.label}>Correo Electrónico Autorizado</label>
             <input
               type="email"
-              placeholder="admin@zeply.com"
+              placeholder="admin@dominio.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={styles.input}
@@ -107,12 +123,12 @@ export default function MasterLogin() {
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? 'Accediendo...' : 'Iniciar Sesión'}
+            {loading ? 'Validando Seguridad...' : 'Iniciar Sesión'}
           </button>
         </form>
 
         <div style={styles.footerText}>
-          Zeply Platform © 2026
+          Acceso Cifrado • Zeply Platform © 2026
         </div>
       </div>
     </div>
@@ -139,23 +155,23 @@ const styles = {
   },
   header: {
     textAlign: 'center',
-    marginBottom: '28px',
+    marginBottom: '26px',
   },
   brandTitle: {
     fontSize: '28px',
     fontWeight: '800',
     color: '#0284c7',
     letterSpacing: '-0.5px',
-    marginBottom: '6px',
+    marginBottom: '4px',
   },
   title: {
-    fontSize: '22px',
+    fontSize: '20px',
     fontWeight: '700',
     color: '#0f172a',
-    marginBottom: '6px',
+    marginBottom: '4px',
   },
   subtitle: {
-    fontSize: '14px',
+    fontSize: '13px',
     color: '#64748b',
   },
   errorAlert: {
@@ -167,6 +183,7 @@ const styles = {
     fontSize: '13px',
     marginBottom: '18px',
     textAlign: 'center',
+    fontWeight: '600',
   },
   form: {
     display: 'flex',
@@ -236,9 +253,10 @@ const styles = {
     boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)',
   },
   footerText: {
-    marginTop: '28px',
+    marginTop: '26px',
     textAlign: 'center',
-    fontSize: '12px',
+    fontSize: '11px',
     color: '#94a3b8',
+    letterSpacing: '0.3px',
   },
 };

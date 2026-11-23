@@ -346,15 +346,16 @@ export default function MasterDashboard() {
         {/* Footer del Sidebar con usuario y logout */}
         <div style={styles.sidebarFooter}>
           <div style={styles.userProfile}>
-            <div style={styles.userAvatar}>A</div>
+            <div style={styles.userAvatar}>N</div>
             <div style={styles.userInfo}>
-              <div style={styles.userName}>Administrador</div>
-              <div style={styles.userRole}>admin@zeply.com</div>
+              <div style={styles.userName}>Real Admin</div>
+              <div style={styles.userRole}>nexodigitaldev@gmail.com</div>
             </div>
           </div>
           <button
             onClick={() => {
               sessionStorage.clear();
+              localStorage.removeItem('zeply_master_admin_session');
               navigate('/rey-admin');
             }}
             style={styles.sidebarLogoutBtn}
