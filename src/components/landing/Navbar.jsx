@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useScrollPosition } from '../../hooks/useMotion';
-import { Store, Sparkles, ArrowRight, Menu, X } from 'lucide-react';
+import { Store, User, ArrowRight, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const { isScrolled } = useScrollPosition(30);
@@ -9,8 +9,8 @@ export default function Navbar() {
 
   const navLinks = [
     { label: 'Beneficios', href: '#beneficios' },
-    { label: 'Revista Digital', href: '#revista-digital' },
-    { label: 'Planes', href: '#precios' },
+    { label: 'Catálogo Revista', href: '#revista-digital' },
+    { label: 'Precios', href: '#precios' },
     { label: 'Preguntas', href: '#faq' },
   ];
 
@@ -22,21 +22,26 @@ export default function Navbar() {
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 1000,
-        width: 'min(92%, 880px)',
+        width: 'min(94%, 960px)',
         transition: 'all 0.3s ease',
       }}
-      className={isScrolled ? 'glass-nav-scrolled' : 'glass-nav-initial'}
     >
+      {/* Contenedor Flotante Estilo Tiendanube */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: isScrolled ? '10px 24px' : '12px 28px',
+          backgroundColor: '#ffffff',
           borderRadius: '9999px',
+          padding: '8px 12px 8px 24px',
+          boxShadow: isScrolled
+            ? '0 12px 30px -6px rgba(15, 23, 42, 0.12), 0 0 0 1px #e2e8f0'
+            : '0 8px 25px -5px rgba(15, 23, 42, 0.08), 0 0 0 1px #e2e8f0',
+          transition: 'all 0.25s ease',
         }}
       >
-        {/* Logo Zeply */}
+        {/* Logo Zeply a la izquierda */}
         <Link
           to="/"
           style={{
@@ -48,41 +53,38 @@ export default function Navbar() {
         >
           <div
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '11px',
-              background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
+              width: '34px',
+              height: '34px',
+              borderRadius: '50%',
+              backgroundColor: '#0284c7',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(20, 184, 166, 0.3)',
               color: '#ffffff',
+              boxShadow: '0 2px 8px rgba(2, 132, 199, 0.3)',
             }}
           >
-            <Store size={20} strokeWidth={2.4} />
+            <Store size={18} strokeWidth={2.4} />
           </div>
           <span
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 800,
-              fontSize: '1.4rem',
+              fontSize: '1.35rem',
               letterSpacing: '-0.02em',
-              background: 'linear-gradient(135deg, #0f172a 0%, #0284c7 60%, #0d9488 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              lineHeight: 1,
+              color: '#0284c7',
             }}
           >
-            Zeply
+            zeply
           </span>
         </Link>
 
-        {/* Links de Navegación Desktop - Limpios y Espaciados */}
+        {/* Links Centrales - Limpios y Espaciados */}
         <nav
           style={{
             display: 'none',
             alignItems: 'center',
-            gap: '32px',
+            gap: '28px',
           }}
           className="desktop-nav"
         >
@@ -95,8 +97,7 @@ export default function Navbar() {
                 fontWeight: 600,
                 color: '#334155',
                 textDecoration: 'none',
-                transition: 'color 0.2s ease',
-                letterSpacing: '-0.01em',
+                transition: 'color 0.15s ease',
               }}
               onMouseEnter={(e) => (e.target.style.color = '#0284c7')}
               onMouseLeave={(e) => (e.target.style.color = '#334155')}
@@ -106,27 +107,54 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Único Botón de Acción Principal: Crear Tienda Gratis */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Acciones Derecha: Login + Botón Azul "Crear tienda online" */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <Link
+            to="/portal/login"
+            style={{
+              display: 'none',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              color: '#334155',
+              textDecoration: 'none',
+              transition: 'color 0.15s ease',
+            }}
+            className="login-btn-desktop"
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#0284c7')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#334155')}
+          >
+            <User size={17} />
+            <span>Login</span>
+          </Link>
+
           <Link
             to="/registro"
-            className="shimmer-button"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '8px',
-              fontSize: '0.88rem',
+              gap: '6px',
+              fontSize: '0.9rem',
               fontWeight: 700,
               color: '#ffffff',
-              padding: '10px 22px',
+              backgroundColor: '#0284c7',
+              padding: '11px 22px',
               borderRadius: '9999px',
               textDecoration: 'none',
-              boxShadow: '0 4px 14px rgba(14, 165, 233, 0.35)',
+              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#0369a1';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#0284c7';
+              e.currentTarget.style.transform = 'none';
             }}
           >
-            <Sparkles size={15} />
-            <span>Crear Tienda Gratis</span>
-            <ArrowRight size={14} />
+            <span>Crear tienda online</span>
           </Link>
 
           {/* Botón Móvil */}
@@ -150,10 +178,12 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div
           style={{
+            marginTop: '8px',
             padding: '16px 24px',
-            borderTop: '1px solid #e2e8f0',
-            backgroundColor: 'rgba(255, 255, 255, 0.98)',
-            borderRadius: '0 0 24px 24px',
+            backgroundColor: '#ffffff',
+            borderRadius: '20px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+            border: '1px solid #e2e8f0',
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
@@ -175,22 +205,40 @@ export default function Navbar() {
               {item.label}
             </a>
           ))}
-          <Link
-            to="/registro"
-            onClick={() => setMobileMenuOpen(false)}
-            style={{
-              textAlign: 'center',
-              padding: '12px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
-              fontWeight: 700,
-              fontSize: '0.95rem',
-              color: '#ffffff',
-              marginTop: '6px',
-            }}
-          >
-            Crear Tienda Gratis
-          </Link>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+            <Link
+              to="/portal/login"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                flex: 1,
+                textAlign: 'center',
+                padding: '10px',
+                borderRadius: '10px',
+                backgroundColor: '#f1f5f9',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                color: '#0f172a',
+              }}
+            >
+              Login
+            </Link>
+            <Link
+              to="/registro"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                flex: 2,
+                textAlign: 'center',
+                padding: '10px',
+                borderRadius: '10px',
+                backgroundColor: '#0284c7',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                color: '#ffffff',
+              }}
+            >
+              Crear tienda online
+            </Link>
+          </div>
         </div>
       )}
 
@@ -199,12 +247,18 @@ export default function Navbar() {
           .desktop-nav {
             display: flex !important;
           }
+          .login-btn-desktop {
+            display: inline-flex !important;
+          }
           .mobile-toggle {
             display: none !important;
           }
         }
         @media (max-width: 819px) {
           .desktop-nav {
+            display: none !important;
+          }
+          .login-btn-desktop {
             display: none !important;
           }
           .mobile-toggle {

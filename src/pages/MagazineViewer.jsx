@@ -1,141 +1,359 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Store, 
+  Sparkles, 
+  MessageCircle, 
+  BookOpen, 
+  ArrowLeft, 
+  Share2, 
+  Check 
+} from 'lucide-react';
 
-// Datos de demostración según nicho si la tienda no tiene productos en BD
-const DEMO_PRODUCTS_BY_NICHE = {
+// Catálogo editorial con spreads (pares de hojas izquierda y derecha)
+const CATALOG_SPREADS_BY_NICHE = {
   joyeria: [
-    { id: 1, name: 'Anillo Solitario Oro 18K & Diamante Zirconia', price: 289000, tag: 'TOP VENTAS', image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop&q=80', code: 'JOY-01' },
-    { id: 2, name: 'Reloj Cronógrafo Cuarzo Signature Black', price: 420000, tag: 'EDICIÓN LIMITADA', image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=600&auto=format&fit=crop&q=80', code: 'JOY-02' },
-    { id: 3, name: 'Cadena Eslabón Cubano Plata Ley 925', price: 185000, tag: 'TENDENCIA', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop&q=80', code: 'JOY-03' },
-    { id: 4, name: 'Aretes Perla Cultivada y Baño de Oro', price: 135000, tag: 'NUEVO', image: 'https://images.unsplash.com/photo-1630019852942-f89202989a59?w=600&auto=format&fit=crop&q=80', code: 'JOY-04' },
-  ],
-  celulares: [
-    { id: 1, name: 'iPhone 15 Pro Max 256GB Titanio Natural', price: 4890000, tag: 'PREMIUM', image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80', code: 'CEL-01' },
-    { id: 2, name: 'Samsung Galaxy S24 Ultra 512GB Titanium Gray', price: 4590000, tag: 'TOP VENTAS', image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=600&auto=format&fit=crop&q=80', code: 'CEL-02' },
-    { id: 3, name: 'AirPods Pro 2da Generación USB-C', price: 950000, tag: 'ACCESORIO TOP', image: 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600&auto=format&fit=crop&q=80', code: 'CEL-03' },
-    { id: 4, name: 'Funda Magnética Armor Magsafe Anticaídas', price: 85000, tag: 'OFERTA', image: 'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=600&auto=format&fit=crop&q=80', code: 'CEL-04' },
+    {
+      spreadTitle: 'COLECCIÓN ORO 18K & CIRCONIAS SUIZAS',
+      leftPage: {
+        pageNumber: 2,
+        category: 'JOYERÍA DE GALA',
+        tag: 'TOP VENTAS COLOMBIA',
+        name: 'Anillo Solitario Oro 18K & Diamante Circonia',
+        price: 289000,
+        regularPrice: 380000,
+        code: 'JOY-01',
+        image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=700&auto=format&fit=crop&q=80',
+        detail: '✨ Oro laminado 18K con incrustación central y grabado artesanal. Incluye estuche de lujo.',
+        sizes: 'Tallas: 6, 7, 8',
+      },
+      rightPage: {
+        pageNumber: 3,
+        category: 'RELOJERÍA DE PRECISIÓN',
+        tag: 'EDICIÓN LIMITADA',
+        name: 'Reloj Cronógrafo Cuarzo Signature Black',
+        price: 420000,
+        regularPrice: 520000,
+        code: 'JOY-02',
+        image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=700&auto=format&fit=crop&q=80',
+        detail: '⏱️ Maquinaria de cuarzo, cristal zafiro resistente a rayones y correa en cuero genuino.',
+        sizes: 'Edición Black & Gold',
+      },
+    },
+    {
+      spreadTitle: 'PLATA LEY 925 & PERLAS CULTIVADAS',
+      leftPage: {
+        pageNumber: 4,
+        category: 'CADENAS & DIJES',
+        tag: 'MÁS PEDIDO',
+        name: 'Cadena Eslabón Cubano Plata Ley 925',
+        price: 185000,
+        regularPrice: 240000,
+        code: 'JOY-03',
+        image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=700&auto=format&fit=crop&q=80',
+        detail: '🔗 Fabricación en plata maciza certificada con broche de seguridad reforzado.',
+        sizes: 'Longitud: 50cm y 55cm',
+      },
+      rightPage: {
+        pageNumber: 5,
+        category: 'ARETES & PENDIENTES',
+        tag: 'NUEVA COLECCIÓN',
+        name: 'Aretes Perla Cultivada y Baño de Oro',
+        price: 135000,
+        regularPrice: 175000,
+        code: 'JOY-04',
+        image: 'https://images.unsplash.com/photo-1630019852942-f89202989a59?w=700&auto=format&fit=crop&q=80',
+        detail: '🌸 Perlas naturales de río con postes antialérgicos bañados en oro de 24 quilates.',
+        sizes: 'Par exclusivo',
+      },
+    },
   ],
   ropa: [
-    { id: 1, name: 'Chaqueta Bomber Cuero Genuino Premium', price: 295000, tag: 'LOOKBOOK 2026', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop&q=80', code: 'ROP-01' },
-    { id: 2, name: 'Vestido Midi Seda Estampado Floral', price: 189000, tag: 'TENDENCIA', image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop&q=80', code: 'ROP-02' },
-    { id: 3, name: 'Camisa Oversize Algodón Pima Blanco', price: 119000, tag: 'BÁSICO ESENCIAL', image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop&q=80', code: 'ROP-03' },
-    { id: 4, name: 'Pantalón Cargo Táctico Streetwear', price: 145000, tag: 'MÁS VENDIDO', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&auto=format&fit=crop&q=80', code: 'ROP-04' },
+    {
+      spreadTitle: 'STREETWEAR & LOOKBOOK URBANO 2026',
+      leftPage: {
+        pageNumber: 2,
+        category: 'CHAQUETAS & OBERWEAR',
+        tag: 'DROP EXCLUSIVO',
+        name: 'Chaqueta Bomber Aviator Cuero Genuino',
+        price: 295000,
+        regularPrice: 390000,
+        code: 'ROP-01',
+        image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=700&auto=format&fit=crop&q=80',
+        detail: '🧥 Cuero premium con forro térmico satinado y cremalleras metálicas reforzadas.',
+        sizes: 'Tallas: S, M, L, XL',
+      },
+      rightPage: {
+        pageNumber: 3,
+        category: 'VESTIDOS DE PASARELA',
+        tag: 'TENDENCIA',
+        name: 'Vestido Midi Seda Floral Garden Edition',
+        price: 189000,
+        regularPrice: 250000,
+        code: 'ROP-02',
+        image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=700&auto=format&fit=crop&q=80',
+        detail: '👗 Confección en seda estampada con caída ligera y lazo ajustable en la cintura.',
+        sizes: 'Tallas: XS, S, M',
+      },
+    },
   ],
   default: [
-    { id: 1, name: 'Producto Premier Oro / Edición', price: 189000, tag: 'DESTACADO', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80', code: 'PROD-01' },
-    { id: 2, name: 'Colección Signature Exclusiva', price: 125000, tag: 'TENDENCIA', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80', code: 'PROD-02' },
-    { id: 3, name: 'Edición Limitada Temporada', price: 240000, tag: 'NUEVO', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80', code: 'PROD-03' },
-    { id: 4, name: 'Pack Especial de Temporada', price: 95000, tag: 'OFERTA', image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=600&auto=format&fit=crop&q=80', code: 'PROD-04' },
-  ]
+    {
+      spreadTitle: 'CATÁLOGO OFICIAL • EDICIÓN ESPECIAL',
+      leftPage: {
+        pageNumber: 2,
+        category: 'PRODUCTO DESTACADO',
+        tag: 'OFERTA CAMPAÑA',
+        name: 'Fragancia Imperial Gold Pour Homme 100ml',
+        price: 139000,
+        regularPrice: 195000,
+        code: 'CAT-01',
+        image: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=700&auto=format&fit=crop&q=80',
+        detail: '✨ Notas maderosas y cuero con fijación prolongada de 24 horas.',
+        sizes: '100ml Eau de Parfum',
+      },
+      rightPage: {
+        pageNumber: 3,
+        category: 'ALTA GAMA',
+        tag: 'MÁS VENDIDO',
+        name: 'Perfume Rosa Éclat Privée 75ml',
+        price: 125000,
+        regularPrice: 180000,
+        code: 'CAT-02',
+        image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=700&auto=format&fit=crop&q=80',
+        detail: '🌸 Vainilla francesa y jazmín silvestre con atomizador de lujo.',
+        sizes: '75ml Parfum Concentré',
+      },
+    },
+  ],
 };
 
 export default function MagazineViewer() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentSpreadIndex, setCurrentSpreadIndex] = useState(0);
   const [store, setStore] = useState(null);
   const [currency, setCurrency] = useState('COP');
-  const [loading, setLoading] = useState(true);
-
-  const totalPages = 4;
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     loadStore();
   }, [slug]);
 
   const loadStore = async () => {
-    setLoading(true);
     try {
       if (slug) {
+        // Buscar tienda en supabase
         const { data } = await supabase.from('tenants').select('*').eq('slug', slug).single();
         if (data) {
           setStore(data);
-        } else {
-          setStore({
-            name: slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Tienda Zeply',
-            slug: slug || 'demo',
-            niche: 'joyeria',
-            whatsapp: '3184804720',
-            plan: 'STARTER',
-          });
+          return;
         }
-      } else {
-        setStore({
-          name: 'Aura Joyas & Relojes',
-          slug: 'aurajoyas',
-          niche: 'joyeria',
-          whatsapp: '3184804720',
-          plan: 'PRO',
-        });
       }
+      // Fallback a localStorage si el cliente creó la tienda
+      const localSession = localStorage.getItem('zeply_client_session');
+      if (localSession) {
+        const parsed = JSON.parse(localSession);
+        if (parsed.slug === slug || !slug) {
+          setStore(parsed);
+          return;
+        }
+      }
+
+      setStore({
+        name: slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Aura & Co. Joyería',
+        slug: slug || 'joyeria',
+        niche: slug === 'ropa' ? 'ropa' : 'joyeria',
+        whatsapp: '573124567890',
+      });
     } catch {
       setStore({
-        name: 'Aura Joyas & Relojes',
-        slug: 'aurajoyas',
+        name: 'Aura & Co. Joyería Fina',
+        slug: 'joyeria',
         niche: 'joyeria',
-        whatsapp: '3184804720',
-        plan: 'PRO',
+        whatsapp: '573124567890',
       });
-    } finally {
-      setLoading(false);
     }
   };
+
+  const nicheKey = store?.niche === 'ropa' ? 'ropa' : 'joyeria';
+  const spreads = CATALOG_SPREADS_BY_NICHE[nicheKey] || CATALOG_SPREADS_BY_NICHE.default;
+  const currentSpread = spreads[currentSpreadIndex] || spreads[0];
 
   const formatPrice = (amount) => {
     if (currency === 'USD') {
       const usd = (amount / 4000).toFixed(2);
-      return `$ ${usd} USD`;
+      return `$${usd} USD`;
     }
-    return `$ ${new Intl.NumberFormat('es-CO').format(amount)} COP`;
+    return `$${amount.toLocaleString('es-CO')} COP`;
   };
 
-  const products = (store && DEMO_PRODUCTS_BY_NICHE[store.niche]) || DEMO_PRODUCTS_BY_NICHE.default;
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  const handleNextSpread = () => {
+    if (isFlipping) return;
+    setIsFlipping(true);
+    setTimeout(() => {
+      setCurrentSpreadIndex((prev) => (prev < spreads.length - 1 ? prev + 1 : 0));
+      setIsFlipping(false);
+    }, 220);
   };
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  const handlePrevSpread = () => {
+    if (isFlipping) return;
+    setIsFlipping(true);
+    setTimeout(() => {
+      setCurrentSpreadIndex((prev) => (prev > 0 ? prev - 1 : spreads.length - 1));
+      setIsFlipping(false);
+    }, 220);
   };
 
-  if (loading) {
-    return (
-      <div style={styles.loadingContainer}>
-        <div style={styles.spinner} />
-        <p style={{ color: '#ffffff', marginTop: '16px' }}>Cargando Revista Interactiva Zeply...</p>
-      </div>
+  const handleWhatsAppOrder = (item) => {
+    const phone = store?.whatsapp ? store.whatsapp.replace(/\D/g, '') : '573124567890';
+    const message = encodeURIComponent(
+      `¡Hola ${store?.name || 'Zeply'}! 👋\nVi su Revista Digital Interactiva y quiero pedir este producto:\n\n🛍️ *Producto:* ${item.name}\n🏷️ *Código:* ${item.code}\n💰 *Precio:* ${formatPrice(item.price)}\n\n¿Tienen disponibilidad para envío?`
     );
-  }
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+  };
 
-  const storePhone = store?.whatsapp ? store.whatsapp.replace(/\D/g, '') : '3184804720';
-  const whatsappUrl = (productName, price, code) => {
-    const text = encodeURIComponent(
-      `¡Hola ${store?.name || 'Zeply'}! Vi tu Revista Digital Interactiva y quiero hacer el pedido de:\n\n📦 *Producto:* ${productName}\n🏷️ *Código:* ${code}\n💰 *Precio:* ${formatPrice(price)}\n\n¿Tienen disponibilidad para envío inmediato?`
-    );
-    return `https://wa.me/57${storePhone}?text=${text}`;
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
   };
 
   return (
-    <div style={styles.container}>
-      {/* Barra superior de control */}
-      <header style={styles.topbar}>
-        <div style={styles.topbarLeft}>
-          <span style={styles.badge}>📖 REVISTA DIGITAL INTERACTIVA</span>
-          <span style={styles.storeName}>{store?.name}</span>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#070d18',
+        background: 'radial-gradient(circle at 50% 20%, #0f1d35 0%, #060b13 100%)',
+        color: '#ffffff',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Barra Superior con Controles */}
+      <header
+        style={{
+          backgroundColor: 'rgba(11, 21, 40, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          padding: '12px 24px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#ffffff',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+            }}
+          >
+            <ArrowLeft size={14} />
+            <span>Inicio</span>
+          </button>
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#38bdf8', letterSpacing: '0.06em' }}>
+                📖 REVISTA DIGITAL OFICIAL
+              </span>
+              <span style={{ fontSize: '0.68rem', color: '#10b981', fontWeight: 700 }}>• EN VIVO</span>
+            </div>
+            <h1 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, fontFamily: 'var(--font-display)' }}>
+              {store?.name || 'Catálogo Zeply'}
+            </h1>
+          </div>
         </div>
 
-        <div style={styles.topbarControls}>
-          {/* Selector de Moneda */}
-          <div style={styles.currencyToggle}>
+        {/* Controles Centrales de Pase de Página */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={handlePrevSpread}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '7px 14px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#ffffff',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+            }}
+          >
+            <ChevronLeft size={16} />
+            <span>◀ Anterior</span>
+          </button>
+
+          <span
+            style={{
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              color: '#38bdf8',
+              backgroundColor: 'rgba(2, 132, 199, 0.2)',
+              padding: '4px 12px',
+              borderRadius: '999px',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+            }}
+          >
+            Pág. {currentSpread.leftPage.pageNumber} - {currentSpread.rightPage.pageNumber}
+          </span>
+
+          <button
+            onClick={handleNextSpread}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '7px 14px',
+              borderRadius: '8px',
+              backgroundColor: '#0284c7',
+              border: 'none',
+              color: '#ffffff',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              boxShadow: '0 2px 10px rgba(2, 132, 199, 0.4)',
+            }}
+          >
+            <span>Siguiente ▶</span>
+            <ChevronRight size={16} />
+          </button>
+        </div>
+
+        {/* Selector Moneda y Compartir */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', backgroundColor: 'rgba(255, 255, 255, 0.08)', borderRadius: '8px', padding: '2px' }}>
             <button
               onClick={() => setCurrency('COP')}
               style={{
-                ...styles.currencyBtn,
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
                 backgroundColor: currency === 'COP' ? '#0284c7' : 'transparent',
-                color: currency === 'COP' ? '#ffffff' : '#94a3b8',
+                color: '#ffffff',
               }}
             >
               COP
@@ -143,718 +361,368 @@ export default function MagazineViewer() {
             <button
               onClick={() => setCurrency('USD')}
               style={{
-                ...styles.currencyBtn,
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
                 backgroundColor: currency === 'USD' ? '#0284c7' : 'transparent',
-                color: currency === 'USD' ? '#ffffff' : '#94a3b8',
+                color: '#ffffff',
               }}
             >
               USD
             </button>
           </div>
 
-          {/* Navegación de páginas */}
-          <div style={styles.pagination}>
-            <button
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-              style={{
-                ...styles.pageNavBtn,
-                opacity: currentPage === 1 ? 0.4 : 1,
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-              }}
-            >
-              ◀ Anterior
-            </button>
-            <span style={styles.pageIndicator}>
-              Pág. {currentPage} de {totalPages}
-            </span>
-            <button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-              style={{
-                ...styles.pageNavBtn,
-                opacity: currentPage === totalPages ? 0.4 : 1,
-                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-              }}
-            >
-              Siguiente ▶
-            </button>
-          </div>
-
-          <button onClick={() => navigate('/rey-admin/dashboard')} style={styles.exitBtn}>
-            Volver al Panel
+          <button
+            onClick={handleCopyLink}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 12px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#ffffff',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+            }}
+          >
+            {copiedLink ? <Check size={14} color="#10b981" /> : <Share2 size={14} />}
+            <span>{copiedLink ? '¡Enlace Copiado!' : 'Compartir'}</span>
           </button>
         </div>
       </header>
 
-      {/* Contenedor tipo revista flip-book centrado */}
-      <main style={styles.magazineViewport}>
-        <div style={styles.magazineSpread}>
-          {/* ═══════════════════════════════════════════ */}
-          {/* PÁGINA 1: PORTADA EDITORIAL DE ALTA GAMA    */}
-          {/* ═══════════════════════════════════════════ */}
-          {currentPage === 1 && (
-            <div style={styles.pageCover}>
-              <div style={styles.coverHeader}>
-                <div style={styles.coverIssueBadge}>EDICIÓN EXCLUSIVA 2026</div>
-                <h1 style={styles.coverTitle}>{store?.name?.toUpperCase()}</h1>
-                <p style={styles.coverSub}>CATÁLOGO LOOKBOOK OFICIAL</p>
-                <div style={styles.coverLine} />
-              </div>
+      {/* VIEWPORT PRINCIPAL: LIBRO ABIERTO DE 2 HOJAS */}
+      <main
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '30px 20px',
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <span
+            style={{
+              fontSize: '0.78rem',
+              fontWeight: 800,
+              color: '#38bdf8',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}
+          >
+            {currentSpread.spreadTitle}
+          </span>
+        </div>
 
-              <div style={styles.coverHeroWrapper}>
-                <img
-                  src={products[0]?.image}
-                  alt="Portada"
-                  style={styles.coverHeroImg}
-                />
-                <div style={styles.coverHeroOverlay}>
-                  <span style={styles.coverHeroTag}>NOVA COLECCIÓN</span>
-                  <div style={styles.coverHeroText}>Diseño Vanguardista & Máxima Calidad</div>
-                </div>
-              </div>
+        {/* EL LIBRO ABIERTO (2 HOJAS CON PLIEGUE CENTRAL 3D) */}
+        <div
+          style={{
+            maxWidth: '1060px',
+            width: '100%',
+            backgroundColor: '#ffffff',
+            borderRadius: '24px',
+            boxShadow: '0 30px 80px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.15)',
+            position: 'relative',
+            overflow: 'hidden',
+            transition: 'opacity 0.22s ease, transform 0.22s ease',
+            opacity: isFlipping ? 0.6 : 1,
+            transform: isFlipping ? 'scale(0.985)' : 'scale(1)',
+          }}
+        >
+          {/* Lomo Central del Libro (Sombra Realista de Pliegue) */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: '50%',
+              width: '44px',
+              transform: 'translateX(-50%)',
+              background: 'linear-gradient(90deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0.12) 100%)',
+              zIndex: 10,
+              pointerEvents: 'none',
+            }}
+          />
 
-              <div style={styles.coverFooter}>
-                <div style={styles.coverHelpBox}>
-                  <span style={{ fontSize: '18px' }}>👉</span>
-                  <span>
-                    <strong>¿Cómo comprar?</strong> Pasa las páginas, explora los productos en alta resolución y pulsa el botón <strong>Pedir por WhatsApp</strong> para ordenar de forma instantánea.
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              color: '#0f172a',
+            }}
+          >
+            {/* ═══════════════════════════════════════════ */}
+            {/* HOJA IZQUIERDA (PÁGINA PAR)                 */}
+            {/* ═══════════════════════════════════════════ */}
+            <div
+              style={{
+                padding: '38px 34px',
+                borderRight: '1px solid #e2e8f0',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                background: 'linear-gradient(135deg, #ffffff 0%, #fafcfd 100%)',
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#0284c7', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    {currentSpread.leftPage.category}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 800,
+                      backgroundColor: '#e0f2fe',
+                      color: '#0369a1',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    {currentSpread.leftPage.tag}
                   </span>
                 </div>
 
-                <button onClick={handleNextPage} style={styles.btnExplore}>
-                  Abrir Catálogo y Explorar →
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ═══════════════════════════════════════════ */}
-          {/* PÁGINA 2: NOVEDADES DESTACADAS              */}
-          {/* ═══════════════════════════════════════════ */}
-          {currentPage === 2 && (
-            <div style={styles.pageInner}>
-              <div style={styles.pageHeaderBanner}>
-                <div>
-                  <span style={styles.pageCategoryLabel}>COLECCIÓN DESTACADA • PÁGINA 02</span>
-                  <h2 style={styles.pageHeading}>Novedades de Temporada</h2>
-                </div>
-                <div style={styles.pageHeaderRight}>
-                  Pedidos directos vía WhatsApp oficial: <strong>+{storePhone}</strong>
-                </div>
-              </div>
-
-              <div style={styles.productsGrid}>
-                {products.slice(0, 2).map((item) => (
-                  <div key={item.id} style={styles.productCard}>
-                    <div style={styles.productImgContainer}>
-                      <span style={styles.productBadge}>{item.tag}</span>
-                      <img src={item.image} alt={item.name} style={styles.productImg} />
-                    </div>
-                    <div style={styles.productBody}>
-                      <div style={styles.productCode}>Ref: {item.code}</div>
-                      <h3 style={styles.productName}>{item.name}</h3>
-                      <div style={styles.productPrice}>{formatPrice(item.price)}</div>
-                      <div style={styles.actionRow}>
-                        <a
-                          href={whatsappUrl(item.name, item.price, item.code)}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={styles.btnOrderWhatsApp}
-                        >
-                          💬 Pedir por WhatsApp
-                        </a>
-                        {store?.plan === 'PRO' && (
-                          <button
-                            onClick={() => alert(`Iniciando pasarela de pago para ${item.name} (${formatPrice(item.price)})`)}
-                            style={styles.btnOrderGateway}
-                          >
-                            💳 Pagar con Tarjeta/PSE
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={styles.pageBottomNav}>
-                <button onClick={handlePrevPage} style={styles.bottomNavBtn}>◀ Volver a la Portada</button>
-                <button onClick={handleNextPage} style={styles.bottomNavBtnPrimary}>Ver Más Productos (Página 3) ▶</button>
-              </div>
-            </div>
-          )}
-
-          {/* ═══════════════════════════════════════════ */}
-          {/* PÁGINA 3: COLECCIÓN SIGNATURE               */}
-          {/* ═══════════════════════════════════════════ */}
-          {currentPage === 3 && (
-            <div style={styles.pageInner}>
-              <div style={styles.pageHeaderBanner}>
-                <div>
-                  <span style={styles.pageCategoryLabel}>SELECCIÓN PREMIUM • PÁGINA 03</span>
-                  <h2 style={styles.pageHeading}>Edición Limitada & Exclusivos</h2>
-                </div>
-                <div style={styles.pageHeaderRight}>
-                  Garantía y asesoría personalizada por WhatsApp
-                </div>
-              </div>
-
-              <div style={styles.productsGrid}>
-                {products.slice(2, 4).map((item) => (
-                  <div key={item.id} style={styles.productCard}>
-                    <div style={styles.productImgContainer}>
-                      <span style={styles.productBadge}>{item.tag}</span>
-                      <img src={item.image} alt={item.name} style={styles.productImg} />
-                    </div>
-                    <div style={styles.productBody}>
-                      <div style={styles.productCode}>Ref: {item.code}</div>
-                      <h3 style={styles.productName}>{item.name}</h3>
-                      <div style={styles.productPrice}>{formatPrice(item.price)}</div>
-                      <div style={styles.actionRow}>
-                        <a
-                          href={whatsappUrl(item.name, item.price, item.code)}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={styles.btnOrderWhatsApp}
-                        >
-                          💬 Pedir por WhatsApp
-                        </a>
-                        {store?.plan === 'PRO' && (
-                          <button
-                            onClick={() => alert(`Iniciando pasarela de pago para ${item.name} (${formatPrice(item.price)})`)}
-                            style={styles.btnOrderGateway}
-                          >
-                            💳 Pagar con Tarjeta/PSE
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={styles.pageBottomNav}>
-                <button onClick={handlePrevPage} style={styles.bottomNavBtn}>◀ Página Anterior</button>
-                <button onClick={handleNextPage} style={styles.bottomNavBtnPrimary}>Ver Políticas y Envíos (Pág. 4) ▶</button>
-              </div>
-            </div>
-          )}
-
-          {/* ═══════════════════════════════════════════ */}
-          {/* PÁGINA 4: CONTRAPORTADA, ENVÍOS Y PAGOS    */}
-          {/* ═══════════════════════════════════════════ */}
-          {currentPage === 4 && (
-            <div style={styles.pageBackCover}>
-              <div style={styles.backCoverHeader}>
-                <span style={styles.coverIssueBadge}>CONTRAPORTADA • FINAL</span>
-                <h2 style={styles.backCoverTitle}>¿Listo para Realizar tu Pedido?</h2>
-                <p style={styles.backCoverSubtitle}>
-                  Atención directa, envíos seguros y soporte continuo para todos nuestros clientes.
-                </p>
-              </div>
-
-              <div style={styles.featuresCardsGrid}>
-                <div style={styles.featureBox}>
-                  <div style={styles.featureIcon}>🚚</div>
-                  <div style={styles.featureTitle}>Envíos a Todo el País</div>
-                  <div style={styles.featureDesc}>
-                    Despachos rápidos y asegurados con número de guía en tiempo real para rastreo.
-                  </div>
-                </div>
-
-                <div style={styles.featureBox}>
-                  <div style={styles.featureIcon}>
-                    {store?.plan === 'PRO' ? '💳' : '💬'}
-                  </div>
-                  <div style={styles.featureTitle}>
-                    {store?.plan === 'PRO' ? 'Pasarela de Pagos & WhatsApp' : 'Pedidos por WhatsApp'}
-                  </div>
-                  <div style={styles.featureDesc}>
-                    {store?.plan === 'PRO'
-                      ? 'Paga con tarjeta de crédito, PSE o Nequi de forma segura en línea, o coordina por WhatsApp.'
-                      : 'Atención personalizada para cotizar y confirmar tu pedido directamente en el chat.'}
-                  </div>
-                </div>
-
-                <div style={styles.featureBox}>
-                  <div style={styles.featureIcon}>🛡️</div>
-                  <div style={styles.featureTitle}>Garantía de Satisfacción</div>
-                  <div style={styles.featureDesc}>
-                    Todos nuestros productos cuentan con garantía oficial de fábrica y soporte posventa.
-                  </div>
-                </div>
-              </div>
-
-              {/* Botón Central para Contactar por WhatsApp */}
-              <div style={styles.backCoverCtaBox}>
-                <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', color: '#0f172a' }}>
-                  Atención Inmediata con un Asesor
-                </h3>
-                <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#64748b' }}>
-                  ¿Tienes dudas o buscas una referencia personalizada? Escríbenos directamente.
-                </p>
-                <a
-                  href={`https://wa.me/57${storePhone}?text=${encodeURIComponent('¡Hola! Estuve viendo la Revista Interactiva y quiero hacer una consulta sobre los productos.')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={styles.bigWhatsAppBtn}
+                {/* Foto del Producto con Código */}
+                <div
+                  style={{
+                    position: 'relative',
+                    height: '270px',
+                    borderRadius: '18px',
+                    overflow: 'hidden',
+                    backgroundColor: '#f1f5f9',
+                    marginBottom: '18px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+                  }}
                 >
-                  💬 Escribir al WhatsApp Oficial de la Tienda
-                </a>
+                  <img
+                    src={currentSpread.leftPage.image}
+                    alt={currentSpread.leftPage.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      left: '12px',
+                      backgroundColor: 'rgba(15, 23, 42, 0.88)',
+                      color: '#ffffff',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      backdropFilter: 'blur(4px)',
+                    }}
+                  >
+                    REF: {currentSpread.leftPage.code}
+                  </div>
+                </div>
+
+                <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0b1528', marginBottom: '6px', lineHeight: 1.3 }}>
+                  {currentSpread.leftPage.name}
+                </h2>
+
+                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: 1.5, marginBottom: '10px' }}>
+                  {currentSpread.leftPage.detail}
+                </p>
+
+                <div style={{ fontSize: '0.76rem', color: '#0d9488', fontWeight: 700, marginBottom: '18px' }}>
+                  {currentSpread.leftPage.sizes}
+                </div>
               </div>
 
-              <div style={styles.pageBottomNav}>
-                <button onClick={handlePrevPage} style={styles.bottomNavBtn}>◀ Volver a Productos</button>
-                <button onClick={() => setCurrentPage(1)} style={styles.bottomNavBtnPrimary}>Volver a la Portada ↺</button>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '14px' }}>
+                  <span style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0284c7', fontFamily: 'var(--font-display)' }}>
+                    {formatPrice(currentSpread.leftPage.price)}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: '#94a3b8', textDecoration: 'line-through' }}>
+                    {formatPrice(currentSpread.leftPage.regularPrice)}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => handleWhatsAppOrder(currentSpread.leftPage)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    backgroundColor: '#10b981',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                  }}
+                >
+                  <MessageCircle size={18} />
+                  <span>Pedir por WhatsApp</span>
+                </button>
+
+                <div style={{ textAlign: 'left', marginTop: '14px', fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700 }}>
+                  PÁGINA {currentSpread.leftPage.pageNumber}
+                </div>
               </div>
             </div>
-          )}
+
+            {/* ═══════════════════════════════════════════ */}
+            {/* HOJA DERECHA (PÁGINA IMPAR)                 */}
+            {/* ═══════════════════════════════════════════ */}
+            <div
+              style={{
+                padding: '38px 34px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                background: 'linear-gradient(225deg, #ffffff 0%, #fafcfd 100%)',
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#0284c7', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    {currentSpread.rightPage.category}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 800,
+                      backgroundColor: '#fef3c7',
+                      color: '#b45309',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    {currentSpread.rightPage.tag}
+                  </span>
+                </div>
+
+                {/* Foto del Producto con Código */}
+                <div
+                  style={{
+                    position: 'relative',
+                    height: '270px',
+                    borderRadius: '18px',
+                    overflow: 'hidden',
+                    backgroundColor: '#f1f5f9',
+                    marginBottom: '18px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+                  }}
+                >
+                  <img
+                    src={currentSpread.rightPage.image}
+                    alt={currentSpread.rightPage.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      left: '12px',
+                      backgroundColor: 'rgba(15, 23, 42, 0.88)',
+                      color: '#ffffff',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      backdropFilter: 'blur(4px)',
+                    }}
+                  >
+                    REF: {currentSpread.rightPage.code}
+                  </div>
+                </div>
+
+                <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0b1528', marginBottom: '6px', lineHeight: 1.3 }}>
+                  {currentSpread.rightPage.name}
+                </h2>
+
+                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: 1.5, marginBottom: '10px' }}>
+                  {currentSpread.rightPage.detail}
+                </p>
+
+                <div style={{ fontSize: '0.76rem', color: '#0d9488', fontWeight: 700, marginBottom: '18px' }}>
+                  {currentSpread.rightPage.sizes}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '14px' }}>
+                  <span style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0284c7', fontFamily: 'var(--font-display)' }}>
+                    {formatPrice(currentSpread.rightPage.price)}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: '#94a3b8', textDecoration: 'line-through' }}>
+                    {formatPrice(currentSpread.rightPage.regularPrice)}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => handleWhatsAppOrder(currentSpread.rightPage)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    backgroundColor: '#10b981',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                  }}
+                >
+                  <MessageCircle size={18} />
+                  <span>Pedir por WhatsApp</span>
+                </button>
+
+                <div style={{ textAlign: 'right', marginTop: '14px', fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700 }}>
+                  PÁGINA {currentSpread.rightPage.pageNumber}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Botón Flotante para pasar página al tocar */}
+        <div style={{ display: 'flex', gap: '14px', marginTop: '24px' }}>
+          <button
+            onClick={handlePrevSpread}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '999px',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              fontSize: '0.86rem',
+              fontWeight: 700,
+            }}
+          >
+            ◀ Voltear a la Página Anterior
+          </button>
+          <button
+            onClick={handleNextSpread}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '999px',
+              backgroundColor: '#0284c7',
+              color: '#ffffff',
+              fontSize: '0.86rem',
+              fontWeight: 700,
+              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+            }}
+          >
+            Pasar a la Siguiente Hoja ▶
+          </button>
         </div>
       </main>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#0b1120',
-    color: '#f8fafc',
-    display: 'flex',
-    flexDirection: 'column',
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-  },
-  loadingContainer: {
-    height: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0b1120',
-  },
-  spinner: {
-    width: '40px',
-    height: '40px',
-    border: '3px solid rgba(255,255,255,0.1)',
-    borderTopColor: '#0284c7',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-  },
-  topbar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '14px 24px',
-    backgroundColor: '#0f172a',
-    borderBottom: '1px solid #1e293b',
-    flexWrap: 'wrap',
-    gap: '12px',
-  },
-  topbarLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
-  badge: {
-    backgroundColor: 'rgba(2, 132, 199, 0.2)',
-    color: '#38bdf8',
-    border: '1px solid rgba(2, 132, 199, 0.4)',
-    padding: '4px 10px',
-    borderRadius: '20px',
-    fontSize: '11px',
-    fontWeight: '800',
-    letterSpacing: '0.05em',
-  },
-  storeName: {
-    fontSize: '16px',
-    fontWeight: '800',
-    color: '#ffffff',
-  },
-  topbarControls: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '14px',
-  },
-  currencyToggle: {
-    display: 'flex',
-    backgroundColor: '#1e293b',
-    borderRadius: '6px',
-    padding: '2px',
-  },
-  currencyBtn: {
-    padding: '5px 12px',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: '700',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-  },
-  pagination: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  pageNavBtn: {
-    backgroundColor: '#1e293b',
-    color: '#f8fafc',
-    border: '1px solid #334155',
-    padding: '6px 12px',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '700',
-    transition: 'all 0.15s ease',
-  },
-  pageIndicator: {
-    fontSize: '13px',
-    fontWeight: '700',
-    color: '#94a3b8',
-    padding: '0 4px',
-  },
-  exitBtn: {
-    backgroundColor: '#334155',
-    color: '#ffffff',
-    border: 'none',
-    padding: '6px 14px',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '700',
-    cursor: 'pointer',
-  },
-  magazineViewport: {
-    flex: 1,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '24px 16px',
-  },
-  magazineSpread: {
-    width: '100%',
-    maxWidth: '850px',
-    backgroundColor: '#ffffff',
-    color: '#0f172a',
-    borderRadius: '16px',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-    overflow: 'hidden',
-    border: '1px solid rgba(255,255,255,0.1)',
-  },
-  pageCover: {
-    padding: '40px 32px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center',
-    background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)',
-  },
-  coverHeader: {
-    marginBottom: '24px',
-  },
-  coverIssueBadge: {
-    fontSize: '11px',
-    fontWeight: '800',
-    letterSpacing: '0.15em',
-    color: '#0284c7',
-    marginBottom: '6px',
-  },
-  coverTitle: {
-    fontSize: '34px',
-    fontWeight: '900',
-    letterSpacing: '-0.02em',
-    color: '#0f172a',
-    margin: '0 0 6px 0',
-  },
-  coverSub: {
-    fontSize: '14px',
-    letterSpacing: '0.12em',
-    color: '#64748b',
-    fontWeight: '700',
-    margin: 0,
-  },
-  coverLine: {
-    width: '60px',
-    height: '3px',
-    backgroundColor: '#0284c7',
-    margin: '12px auto 0 auto',
-    borderRadius: '2px',
-  },
-  coverHeroWrapper: {
-    position: 'relative',
-    width: '100%',
-    maxHeight: '360px',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.15)',
-    marginBottom: '28px',
-  },
-  coverHeroImg: {
-    width: '100%',
-    height: '360px',
-    objectFit: 'cover',
-  },
-  coverHeroOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: '20px',
-    background: 'linear-gradient(180deg, transparent 0%, rgba(15,23,42,0.85) 100%)',
-    color: '#ffffff',
-    textAlign: 'left',
-  },
-  coverHeroTag: {
-    fontSize: '11px',
-    fontWeight: '800',
-    letterSpacing: '0.1em',
-    color: '#38bdf8',
-  },
-  coverHeroText: {
-    fontSize: '20px',
-    fontWeight: '800',
-    marginTop: '4px',
-  },
-  coverFooter: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  coverHelpBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    backgroundColor: '#e0f2fe',
-    border: '1px solid #bae6fd',
-    borderRadius: '8px',
-    padding: '12px 18px',
-    fontSize: '13px',
-    color: '#0369a1',
-    textAlign: 'left',
-    lineHeight: '1.4',
-  },
-  btnExplore: {
-    backgroundColor: '#0284c7',
-    color: '#ffffff',
-    border: 'none',
-    padding: '14px 28px',
-    borderRadius: '8px',
-    fontSize: '15px',
-    fontWeight: '800',
-    cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
-  },
-  pageInner: {
-    padding: '32px',
-  },
-  pageHeaderBanner: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    borderBottom: '2px solid #e2e8f0',
-    paddingBottom: '16px',
-    marginBottom: '24px',
-    flexWrap: 'wrap',
-    gap: '10px',
-  },
-  pageCategoryLabel: {
-    fontSize: '11px',
-    fontWeight: '800',
-    letterSpacing: '0.1em',
-    color: '#0284c7',
-  },
-  pageHeading: {
-    fontSize: '24px',
-    fontWeight: '900',
-    color: '#0f172a',
-    margin: '4px 0 0 0',
-  },
-  pageHeaderRight: {
-    fontSize: '12px',
-    color: '#64748b',
-  },
-  productsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '24px',
-    marginBottom: '28px',
-  },
-  productCard: {
-    backgroundColor: '#f8fafc',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  productImgContainer: {
-    position: 'relative',
-    height: '240px',
-    overflow: 'hidden',
-  },
-  productBadge: {
-    position: 'absolute',
-    top: '10px',
-    left: '10px',
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    color: '#ffffff',
-    fontSize: '10px',
-    fontWeight: '800',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    letterSpacing: '0.05em',
-  },
-  productImg: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  productBody: {
-    padding: '18px',
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-  },
-  productCode: {
-    fontSize: '11px',
-    color: '#94a3b8',
-    fontWeight: '700',
-    marginBottom: '4px',
-  },
-  productName: {
-    fontSize: '16px',
-    fontWeight: '800',
-    color: '#0f172a',
-    margin: '0 0 10px 0',
-    lineHeight: '1.3',
-  },
-  productPrice: {
-    fontSize: '18px',
-    fontWeight: '900',
-    color: '#0284c7',
-    marginBottom: '16px',
-  },
-  actionRow: {
-    marginTop: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  btnOrderWhatsApp: {
-    backgroundColor: '#16a34a',
-    color: '#ffffff',
-    textDecoration: 'none',
-    padding: '10px 14px',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '800',
-    textAlign: 'center',
-    display: 'block',
-    boxShadow: '0 2px 6px rgba(22, 163, 74, 0.25)',
-  },
-  btnOrderGateway: {
-    backgroundColor: '#7c3aed',
-    color: '#ffffff',
-    border: 'none',
-    padding: '9px 12px',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '700',
-    cursor: 'pointer',
-  },
-  pageBottomNav: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTop: '1px solid #e2e8f0',
-    paddingTop: '16px',
-  },
-  bottomNavBtn: {
-    backgroundColor: '#f1f5f9',
-    color: '#475569',
-    border: '1px solid #cbd5e1',
-    padding: '8px 16px',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '700',
-    cursor: 'pointer',
-  },
-  bottomNavBtnPrimary: {
-    backgroundColor: '#0284c7',
-    color: '#ffffff',
-    border: 'none',
-    padding: '8px 18px',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '800',
-    cursor: 'pointer',
-  },
-  pageBackCover: {
-    padding: '40px 32px',
-    background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)',
-  },
-  backCoverHeader: {
-    textAlign: 'center',
-    marginBottom: '32px',
-  },
-  backCoverTitle: {
-    fontSize: '28px',
-    fontWeight: '900',
-    color: '#0f172a',
-    margin: '6px 0',
-  },
-  backCoverSubtitle: {
-    fontSize: '14px',
-    color: '#64748b',
-    maxWidth: '520px',
-    margin: '0 auto',
-  },
-  featuresCardsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '16px',
-    marginBottom: '32px',
-  },
-  featureBox: {
-    backgroundColor: '#ffffff',
-    padding: '20px',
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
-    textAlign: 'center',
-  },
-  featureIcon: {
-    fontSize: '28px',
-    marginBottom: '8px',
-  },
-  featureTitle: {
-    fontSize: '15px',
-    fontWeight: '800',
-    color: '#0f172a',
-    marginBottom: '6px',
-  },
-  featureDesc: {
-    fontSize: '12px',
-    color: '#64748b',
-    lineHeight: '1.4',
-  },
-  backCoverCtaBox: {
-    backgroundColor: '#ffffff',
-    border: '2px solid #bae6fd',
-    borderRadius: '12px',
-    padding: '28px',
-    textAlign: 'center',
-    marginBottom: '28px',
-    boxShadow: '0 4px 12px rgba(2, 132, 199, 0.08)',
-  },
-  bigWhatsAppBtn: {
-    backgroundColor: '#16a34a',
-    color: '#ffffff',
-    textDecoration: 'none',
-    padding: '14px 28px',
-    borderRadius: '8px',
-    fontSize: '15px',
-    fontWeight: '800',
-    display: 'inline-block',
-    boxShadow: '0 4px 14px rgba(22, 163, 74, 0.3)',
-  },
-};

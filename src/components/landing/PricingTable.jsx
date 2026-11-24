@@ -19,12 +19,13 @@ export default function PricingTable() {
       isPopular: false,
       features: [
         'Hasta 30 productos en inventario',
-        'Tienda online oficial',
-        'Pedidos automáticos directos a WhatsApp',
+        'Tienda online oficial con subdominio',
+        'Pedidos directos por WhatsApp',
         'Catálogo digital estándar',
+        'Código QR para compartir tu tienda con clientes',
         'Panel administrativo de productos y pedidos',
         '0% comisiones por venta',
-        'Soporte estándar por WhatsApp',
+        'Soporte estándar por WhatsApp y email',
       ],
     },
     {
@@ -40,34 +41,36 @@ export default function PricingTable() {
       isPopular: true,
       features: [
         'Hasta 100 productos en catálogo',
-        'Revista Digital Interactiva estilo catálogo Avon/Ésika',
-        'Variaciones de tallas y colores',
-        'Pedidos ilimitados a WhatsApp con checkout',
+        'Todo lo del Plan Básico incluido',
+        'Revista Digital interactiva estilo libro (2 hojas Avon/Ésika)',
+        'Variaciones completas de tallas y colores',
+        'Pedidos directos por WhatsApp sin límites',
         'Panel administrativo completo en tiempo real',
-        'Generador de Códigos QR para packaging',
-        '0% comisiones por venta',
+        'Código QR oficial para compartir y empaques',
         'Soporte prioritario 7 días a la semana',
       ],
     },
     {
       id: 'PRO',
       name: 'Plan Pro',
-      tag: 'ALTO VOLUMEN',
-      desc: 'Para marcas consolidadas con catálogo amplio y gran volumen de despachos.',
+      tag: 'POTENCIA TOTAL & PAGOS ONLINE',
+      desc: 'Para marcas consolidadas con catálogo amplio, dominio propio y pasarela de pagos.',
       priceMonthly: 89900,
       priceAnnual: 71900,
       usdMonthly: 22.5,
       usdAnnual: 18.0,
-      color: '#8b5cf6',
+      color: '#7c3aed',
       isPopular: false,
       features: [
         'Más de 200 productos en catálogo',
-        'Conexión de dominio propio',
+        'Todo lo del Plan Starter incluido',
+        'Checkout en línea y conexión de pasarelas de pago (Wompi, PSE, Tarjetas, Nequi)',
+        'Conexión de dominio propio (.com, .co)',
         'Revista Digital interactiva ilimitada',
-        'Rotación de números de WhatsApp para vendedores',
+        'Variaciones de tallas, colores y stock avanzado',
+        'Rotación de números de WhatsApp para varios vendedores',
         'Métricas avanzadas de visitas y conversión',
-        '0% comisiones por venta',
-        'Soporte VIP telefónico y por WhatsApp',
+        'Soporte prioritario 7 días a la semana + Asesor VIP',
       ],
     },
   ];
@@ -189,7 +192,7 @@ export default function PricingTable() {
           </div>
         </div>
 
-        {/* Grid de 3 Planes Exactos */}
+        {/* Grid de 3 Planes Acumulativos */}
         <div
           style={{
             display: 'grid',
@@ -209,9 +212,9 @@ export default function PricingTable() {
                   backgroundColor: '#ffffff',
                   borderRadius: '26px',
                   padding: '36px 28px',
-                  border: plan.isPopular ? '2px solid #14b8a6' : '1px solid #e2e8f0',
+                  border: plan.isPopular ? '2px solid #0284c7' : '1px solid #e2e8f0',
                   boxShadow: plan.isPopular
-                    ? '0 20px 45px -10px rgba(20, 184, 166, 0.22)'
+                    ? '0 20px 45px -10px rgba(2, 132, 199, 0.22)'
                     : '0 4px 16px rgba(15, 23, 42, 0.04)',
                   position: 'relative',
                   display: 'flex',
@@ -227,14 +230,14 @@ export default function PricingTable() {
                       top: '-14px',
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
+                      backgroundColor: '#0284c7',
                       color: '#ffffff',
                       padding: '5px 16px',
                       borderRadius: '999px',
                       fontSize: '0.72rem',
                       fontWeight: 800,
                       letterSpacing: '0.04em',
-                      boxShadow: '0 4px 12px rgba(20, 184, 166, 0.35)',
+                      boxShadow: '0 4px 12px rgba(2, 132, 199, 0.35)',
                     }}
                   >
                     ⭐ MÁS ELEGIDO POR TIENDAS
@@ -292,11 +295,11 @@ export default function PricingTable() {
                           width: '18px',
                           height: '18px',
                           borderRadius: '50%',
-                          backgroundColor: '#f0fdfa',
+                          backgroundColor: '#f0f9ff',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: '#0d9488',
+                          color: '#0284c7',
                           flexShrink: 0,
                           marginTop: '2px',
                         }}
@@ -325,9 +328,9 @@ export default function PricingTable() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    backgroundColor: plan.isPopular ? '#0d9488' : '#f1f5f9',
+                    backgroundColor: plan.isPopular ? '#0284c7' : '#f1f5f9',
                     color: plan.isPopular ? '#ffffff' : '#0f172a',
-                    boxShadow: plan.isPopular ? '0 6px 18px rgba(13, 148, 136, 0.35)' : 'none',
+                    boxShadow: plan.isPopular ? '0 6px 18px rgba(2, 132, 199, 0.35)' : 'none',
                     transition: 'all 0.2s ease',
                   }}
                   onMouseEnter={(e) => {
