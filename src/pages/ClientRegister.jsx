@@ -298,7 +298,7 @@ export default function ClientRegister() {
           Crea tu Tienda Online Inteligente
         </h1>
         <p style={{ fontSize: '0.95rem', color: '#64748b', marginTop: '6px' }}>
-          Prueba gratuita de 14 días • Sin tarjeta de crédito • Lista en 3 minutos
+          Prueba gratuita de 7 días • Sin tarjeta de crédito • Lista en 3 minutos
         </p>
       </div>
 
@@ -445,45 +445,11 @@ export default function ClientRegister() {
                     outline: 'none',
                   }}
                 />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>
-                  Enlace Web / Subdominio de tu Tienda *
-                </label>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    backgroundColor: '#f8fafc',
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-                    placeholder="mitienda"
-                    required
-                    style={{
-                      flex: 1,
-                      padding: '13px 16px',
-                      border: 'none',
-                      backgroundColor: 'transparent',
-                      fontSize: '0.95rem',
-                      fontWeight: 600,
-                      outline: 'none',
-                    }}
-                  />
-                  <span style={{ padding: '0 16px', fontSize: '0.9rem', color: '#64748b', fontWeight: 700, borderLeft: '1px solid #e2e8f0' }}>
-                    .zeply.co
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '4px' }}>
-                  Tus clientes entrarán a este link para ver tu catálogo.
-                </div>
+                {formData.slug && (
+                  <div style={{ fontSize: '0.78rem', color: '#0d9488', fontWeight: 600, marginTop: '6px' }}>
+                    Identificador de tienda: <strong>{formData.slug}</strong>
+                  </div>
+                )}
               </div>
 
               {/* Nicho de Mercado */}
@@ -813,7 +779,7 @@ export default function ClientRegister() {
                     PLAN SELECCIONADO: {formData.plan}
                   </div>
                   <div style={{ fontSize: '0.86rem', color: '#0f766e', fontWeight: 600 }}>
-                    14 Días de Prueba 100% Gratis
+                    7 Días de Prueba 100% Gratis
                   </div>
                 </div>
                 <span

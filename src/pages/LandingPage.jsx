@@ -3,6 +3,7 @@ import Navbar from '../components/landing/Navbar';
 import HeroSection from '../components/landing/HeroSection';
 import StatsTicker from '../components/landing/StatsTicker';
 import ProblemVsSolution from '../components/landing/ProblemVsSolution';
+import MagazineFlipbook from '../components/landing/MagazineFlipbook';
 import StoreShowcase from '../components/landing/StoreShowcase';
 import RoiCalculator from '../components/landing/RoiCalculator';
 import FeaturesGrid from '../components/landing/FeaturesGrid';
@@ -14,41 +15,50 @@ import Footer from '../components/landing/Footer';
 export default function LandingPage() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fafcfd' }}>
-      {/* Menú Sticky Flotante que cambia de color y estado con el scroll */}
+      {/* Menú Sticky Flotante Limpio y Alineado */}
       <Navbar />
 
-      {/* Hero Principal con Palabras Dinámicas y Mockup Interactivo */}
       <main>
+        {/* Hero Principal con Tipografía de Alta Gama */}
         <HeroSection />
 
-        {/* Ticker de Métricas y Contadores Animados con Scroll Trigger */}
+        {/* Ticker de Métricas Comprobadas */}
         <StatsTicker />
 
-        {/* Beneficios de tener tu tienda y Por Qué Contratarnos (No perder chats de WhatsApp) */}
+        {/* Por Qué Contratarnos: La Solución a los Chats de WhatsApp */}
         <div id="solucion">
           <ProblemVsSolution />
         </div>
 
-        {/* Vitrina de Tiendas Animadas por Nichos con Simulación de Pedido */}
+        {/* Exclusivo Catálogo Revista Digital Estilo Avon/Ésika con Hojas que se Pasan */}
+        <div id="revista-digital">
+          <MagazineFlipbook />
+        </div>
+
+        {/* Vitrina de Tiendas con Botón Estático "Pedir por WhatsApp" */}
         <StoreShowcase />
 
-        {/* Calculadora Gráfica Interactiva de Retorno de Inversión (ROI) */}
+        {/* Calculadora Gráfica de Rentabilidad (ROI) */}
         <RoiCalculator />
 
-        {/* Grid de Beneficios Tecnológicos (Revista PDF, QR, Panel, etc.) */}
-        <FeaturesGrid />
+        {/* Grid de Beneficios Tecnológicos */}
+        <div id="beneficios">
+          <FeaturesGrid />
+        </div>
 
-        {/* Tabla de Planes de Precios Transparentes */}
+        {/* Planes de Precios: 3 Planes con 7 Días de Prueba Gratis */}
         <PricingTable />
 
-        {/* Preguntas Frecuentes optimizadas para Google y Búsquedas de IA */}
-        <FaqAccordion />
+        {/* Preguntas Frecuentes (FAQ) */}
+        <div id="faq">
+          <FaqAccordion />
+        </div>
 
-        {/* CTA Final con Lanzamiento de Confeti */}
+        {/* Llamado a la Acción Final */}
         <CtaSection />
       </main>
 
-      {/* Footer Semántico y SEO */}
+      {/* Footer Semántico */}
       <Footer />
     </div>
   );

@@ -1440,7 +1440,7 @@ export default function ClientDashboard() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10b981' }}>
-                    14 Días
+                    7 Días
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#64748b' }}>Restantes de prueba gratis</div>
                 </div>
@@ -1457,12 +1457,12 @@ export default function ClientDashboard() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.86rem', marginBottom: '8px' }}>
                   <span style={{ color: '#475569' }}>Límite de productos utilizados:</span>
-                  <strong>{products.length} de 250 productos</strong>
+                  <strong>{products.length} de 100 productos (Plan Starter)</strong>
                 </div>
                 <div style={{ height: '8px', backgroundColor: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
                   <div
                     style={{
-                      width: `${(products.length / 250) * 100}%`,
+                      width: `${(products.length / 100) * 100}%`,
                       height: '100%',
                       backgroundColor: '#0d9488',
                       borderRadius: '999px',

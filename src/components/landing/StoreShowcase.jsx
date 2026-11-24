@@ -167,16 +167,8 @@ const STORES_DATA = {
 
 export default function StoreShowcase() {
   const [activeTab, setActiveTab] = useState('joyeria');
-  const [simulatedOrderModal, setSimulatedOrderModal] = useState(null);
 
   const currentStore = STORES_DATA[activeTab];
-
-  const handleSimulateOrder = (product) => {
-    setSimulatedOrderModal({
-      product,
-      storeName: currentStore.name,
-    });
-  };
 
   return (
     <section
@@ -435,9 +427,8 @@ export default function StoreShowcase() {
                       </span>
                     </div>
 
-                    {/* Botón de Simulación de Pedido */}
-                    <button
-                      onClick={() => handleSimulateOrder(product)}
+                    {/* Botón Estático Pedir por WhatsApp */}
+                    <div
                       style={{
                         width: '100%',
                         display: 'flex',
@@ -451,145 +442,19 @@ export default function StoreShowcase() {
                         fontWeight: 700,
                         fontSize: '0.88rem',
                         boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                        cursor: 'default',
+                        userSelect: 'none',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#059669')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#10b981')}
                     >
                       <MessageCircle size={16} />
-                      <span>Pedir por WhatsApp (Demo)</span>
-                    </button>
+                      <span>Pedir por WhatsApp</span>
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-
-        {/* Modal Interactivo de Demostración de Mensaje de WhatsApp */}
-        {simulatedOrderModal && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(11, 21, 40, 0.65)',
-              backdropFilter: 'blur(6px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 2000,
-              padding: '20px',
-            }}
-            onClick={() => setSimulatedOrderModal(null)}
-          >
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '24px',
-                padding: '28px',
-                maxWidth: '480px',
-                width: '100%',
-                boxShadow: '0 25px 60px rgba(0,0,0,0.25)',
-                position: 'relative',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                <div
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    backgroundColor: '#dcfce7',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#16a34a',
-                  }}
-                >
-                  <CheckCircle2 size={22} />
-                </div>
-                <div>
-                  <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
-                    ¡Mensaje de Compra Generado!
-                  </h4>
-                  <p style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                    Así le llegará el pedido a tu WhatsApp desde Zeply
-                  </p>
-                </div>
-              </div>
-
-              {/* Mensaje de WhatsApp Renderizado en Burbuja Verde */}
-              <div
-                style={{
-                  backgroundColor: '#e7f8ea',
-                  borderRadius: '16px',
-                  padding: '16px',
-                  border: '1px solid #bbf7d0',
-                  fontSize: '0.86rem',
-                  color: '#14532d',
-                  lineHeight: 1.6,
-                  fontFamily: 'monospace',
-                  marginBottom: '20px',
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
-{`¡Hola ${simulatedOrderModal.storeName}! 👋
-Quiero confirmar mi pedido realizado en su tienda Zeply:
-
-🛍️ PRODUCTO:
-• 1x ${simulatedOrderModal.product.name}
-• Valor: ${simulatedOrderModal.product.price}
-
-📍 DATOS DE ENVÍO:
-• Cliente: María Camila Restrepo
-• Teléfono: +57 312 456 7890
-• Ciudad: Medellín, Antioquia
-• Dirección: Cra 43A # 18 Sur - 120, Apto 802
-• Método de Pago: Contraentrega
-
-💰 TOTAL A PAGAR: ${simulatedOrderModal.product.price}
-¡Quedo a la espera de la confirmación del despacho! 🚀`}
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  onClick={() => setSimulatedOrderModal(null)}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    borderRadius: '12px',
-                    backgroundColor: '#f1f5f9',
-                    color: '#334155',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                  }}
-                >
-                  Entendido, cerrar
-                </button>
-                <Link
-                  to="/registro"
-                  onClick={() => setSimulatedOrderModal(null)}
-                  style={{
-                    flex: 1,
-                    textAlign: 'center',
-                    padding: '12px',
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
-                    color: '#ffffff',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    textDecoration: 'none',
-                  }}
-                >
-                  Crear mi Tienda Ahora
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

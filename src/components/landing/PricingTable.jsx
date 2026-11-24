@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, Sparkles, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Check, Sparkles, ArrowRight } from 'lucide-react';
 
 export default function PricingTable() {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -10,7 +10,7 @@ export default function PricingTable() {
       id: 'BASIC',
       name: 'Plan Básico',
       tag: 'PARA NUEVOS NEGOCIOS',
-      desc: 'Ideal si estás iniciando y quieres profesionalizar tus ventas por WhatsApp.',
+      desc: 'Ideal si estás iniciando y quieres comenzar a vender por WhatsApp con orden.',
       priceMonthly: 29900,
       priceAnnual: 23900,
       usdMonthly: 7.5,
@@ -18,8 +18,8 @@ export default function PricingTable() {
       color: '#0284c7',
       isPopular: false,
       features: [
-        'Hasta 50 productos en inventario',
-        'Tienda online con subdominio Zeply',
+        'Hasta 30 productos en inventario',
+        'Tienda online oficial',
         'Pedidos automáticos directos a WhatsApp',
         'Catálogo digital estándar',
         'Panel administrativo de productos y pedidos',
@@ -31,7 +31,7 @@ export default function PricingTable() {
       id: 'STARTER',
       name: 'Plan Starter',
       tag: 'MÁS ELEGIDO (RECOMENDADO)',
-      desc: 'La solución completa para marcas que venden a diario y quieren destacar.',
+      desc: 'Para marcas que venden a diario y quieren su catálogo revista interactivo.',
       priceMonthly: 49900,
       priceAnnual: 39900,
       usdMonthly: 12.5,
@@ -39,12 +39,12 @@ export default function PricingTable() {
       color: '#0d9488',
       isPopular: true,
       features: [
-        'Hasta 250 productos con variaciones de tallas/colores',
-        'Exclusiva Revista Digital Interactiva PDF',
+        'Hasta 100 productos en catálogo',
+        'Revista Digital Interactiva estilo catálogo Avon/Ésika',
+        'Variaciones de tallas y colores',
         'Pedidos ilimitados a WhatsApp con checkout',
         'Panel administrativo completo en tiempo real',
         'Generador de Códigos QR para packaging',
-        'Personalización de colores de marca y logo',
         '0% comisiones por venta',
         'Soporte prioritario 7 días a la semana',
       ],
@@ -53,7 +53,7 @@ export default function PricingTable() {
       id: 'PRO',
       name: 'Plan Pro',
       tag: 'ALTO VOLUMEN',
-      desc: 'Para comercios consolidados con catálogo amplio y gran volumen de despachos.',
+      desc: 'Para marcas consolidadas con catálogo amplio y gran volumen de despachos.',
       priceMonthly: 89900,
       priceAnnual: 71900,
       usdMonthly: 22.5,
@@ -61,33 +61,13 @@ export default function PricingTable() {
       color: '#8b5cf6',
       isPopular: false,
       features: [
-        'Hasta 1.000 productos y múltiples categorías',
-        'Conexión de dominio propio (.com, .co)',
-        'Revista Digital HD interactiva ilimitada',
+        'Más de 200 productos en catálogo',
+        'Conexión de dominio propio',
+        'Revista Digital interactiva ilimitada',
         'Rotación de números de WhatsApp para vendedores',
         'Métricas avanzadas de visitas y conversión',
         '0% comisiones por venta',
         'Soporte VIP telefónico y por WhatsApp',
-      ],
-    },
-    {
-      id: 'ENTERPRISE',
-      name: 'Plan Enterprise',
-      tag: 'EMPRESAS Y MAYORISTAS',
-      desc: 'Para distribuidores, franquicias y marcas con requerimientos a medida.',
-      priceMonthly: 169000,
-      priceAnnual: 135000,
-      usdMonthly: 42.0,
-      usdAnnual: 34.0,
-      color: '#0b1528',
-      isPopular: false,
-      features: [
-        'Productos y catálogos ilimitados',
-        'Multi-sucursal y gestión de bodegas',
-        'Capacitación y onboarding VIP 1 a 1',
-        'Integración con ERP o software contable',
-        'Infraestructura de alta disponibilidad',
-        'Gerente de cuenta dedicado',
       ],
     },
   ];
@@ -103,7 +83,7 @@ export default function PricingTable() {
     >
       <div
         style={{
-          maxWidth: '1240px',
+          maxWidth: '1120px',
           margin: '0 auto',
         }}
       >
@@ -124,20 +104,20 @@ export default function PricingTable() {
             }}
           >
             <Sparkles size={15} />
-            <span>PLANES TRANSPARENTES SIN COBROS OCULTOS</span>
+            <span>PLANES CLAROS SIN COBROS OCULTOS</span>
           </div>
 
           <h2
             style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(2rem, 4vw, 2.8rem)',
+              fontSize: 'clamp(2.1rem, 4vw, 2.8rem)',
               fontWeight: 800,
               color: '#0b1528',
               letterSpacing: '-0.02em',
               marginBottom: '14px',
             }}
           >
-            Elige el Plan Perfecto para tu Tienda
+            Elige el Plan para tu Negocio
           </h2>
 
           <p
@@ -148,7 +128,7 @@ export default function PricingTable() {
               margin: '0 auto 28px',
             }}
           >
-            Todos los planes incluyen 14 días de prueba gratuita sin ingresar tarjeta de crédito. Cancela en cualquier momento.
+            Todos los planes incluyen <strong>7 días de prueba gratuita</strong> sin necesidad de ingresar tarjeta de crédito. Cancela cuando quieras.
           </p>
 
           {/* Toggle Mensual / Anual */}
@@ -209,11 +189,11 @@ export default function PricingTable() {
           </div>
         </div>
 
-        {/* Grid de 4 Planes */}
+        {/* Grid de 3 Planes Exactos */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))',
             gap: '24px',
             alignItems: 'stretch',
           }}
@@ -228,7 +208,7 @@ export default function PricingTable() {
                 style={{
                   backgroundColor: '#ffffff',
                   borderRadius: '26px',
-                  padding: '32px 24px',
+                  padding: '36px 28px',
                   border: plan.isPopular ? '2px solid #14b8a6' : '1px solid #e2e8f0',
                   boxShadow: plan.isPopular
                     ? '0 20px 45px -10px rgba(20, 184, 166, 0.22)'
@@ -273,10 +253,10 @@ export default function PricingTable() {
                   >
                     {plan.tag}
                   </span>
-                  <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0b1528', marginTop: '4px' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0b1528', marginTop: '4px' }}>
                     {plan.name}
                   </h3>
-                  <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '4px', lineHeight: 1.4 }}>
+                  <p style={{ fontSize: '0.84rem', color: '#64748b', marginTop: '4px', lineHeight: 1.4 }}>
                     {plan.desc}
                   </p>
                 </div>
@@ -287,14 +267,14 @@ export default function PricingTable() {
                     <span
                       style={{
                         fontFamily: 'var(--font-display)',
-                        fontSize: '2.2rem',
+                        fontSize: '2.4rem',
                         fontWeight: 800,
                         color: '#0b1528',
                       }}
                     >
                       ${price.toLocaleString('es-CO')}
                     </span>
-                    <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
                       COP / mes
                     </span>
                   </div>
@@ -304,7 +284,7 @@ export default function PricingTable() {
                 </div>
 
                 {/* Lista de Características */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, marginBottom: '28px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1, marginBottom: '28px' }}>
                   {plan.features.map((feat, i) => (
                     <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                       <div
@@ -323,7 +303,7 @@ export default function PricingTable() {
                       >
                         <Check size={12} strokeWidth={3} />
                       </div>
-                      <span style={{ fontSize: '0.84rem', color: '#334155', lineHeight: 1.4, fontWeight: 500 }}>
+                      <span style={{ fontSize: '0.86rem', color: '#334155', lineHeight: 1.4, fontWeight: 500 }}>
                         {feat}
                       </span>
                     </div>
@@ -335,10 +315,10 @@ export default function PricingTable() {
                   to={`/registro?plan=${plan.id}`}
                   style={{
                     width: '100%',
-                    padding: '13px',
+                    padding: '14px',
                     borderRadius: '12px',
                     fontWeight: 800,
-                    fontSize: '0.9rem',
+                    fontSize: '0.92rem',
                     textAlign: 'center',
                     textDecoration: 'none',
                     display: 'flex',
@@ -361,7 +341,7 @@ export default function PricingTable() {
                     }
                   }}
                 >
-                  <span>Probar 14 Días Gratis</span>
+                  <span>Probar 7 Días Gratis</span>
                   <ArrowRight size={15} />
                 </Link>
               </div>

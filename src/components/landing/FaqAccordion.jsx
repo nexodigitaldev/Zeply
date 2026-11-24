@@ -30,7 +30,7 @@ export default function FaqAccordion() {
       a: 'Sí. Por defecto tu tienda tiene una dirección rápida oficial (ej: mitienda.zeply.co), pero a partir del Plan Pro puedes conectar fácilmente tu propio dominio .com o .co para máxima autoridad de marca.',
     },
     {
-      q: '¿Cómo funciona la prueba gratuita de 14 días?',
+      q: '¿Cómo funciona la prueba gratuita de 7 días?',
       a: 'Puedes registrarte hoy mismo sin ingresar tarjeta de crédito. Tienes acceso completo a tu panel administrativo, puedes cargar productos, personalizar tu tienda y empezar a recibir pedidos por WhatsApp de inmediato.',
     },
   ];

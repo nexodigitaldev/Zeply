@@ -138,7 +138,7 @@ export default function Footer() {
           </h4>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.86rem' }}>
             <li><Link to="/portal/login" style={{ color: '#38bdf8', fontWeight: 600 }}>→ Acceso a mi Tienda (Portal)</Link></li>
-            <li><Link to="/registro" style={{ color: '#2dd4bf', fontWeight: 600 }}>→ Crear Tienda Gratis (14 Días)</Link></li>
+            <li><Link to="/registro" style={{ color: '#2dd4bf', fontWeight: 600 }}>→ Crear Tienda Gratis (7 Días)</Link></li>
             <li><Link to="/rey-admin">Panel de Administración Maestro</Link></li>
             <li><a href="#faq">Preguntas Frecuentes</a></li>
           </ul>

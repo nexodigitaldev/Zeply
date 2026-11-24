@@ -323,7 +323,7 @@ export default function ClientLogin() {
         <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.88rem', color: '#64748b' }}>
           ¿Aún no tienes tienda?{' '}
           <Link to="/registro" style={{ color: '#0284c7', fontWeight: 700 }}>
-            Crear Tienda Gratis (14 Días)
+            Crear Tienda Gratis (7 Días)
           </Link>
         </div>
       </div>

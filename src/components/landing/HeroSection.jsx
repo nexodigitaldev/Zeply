@@ -209,7 +209,7 @@ export default function HeroSection() {
               }}
             >
               <Sparkles size={18} />
-              <span>Crear mi Tienda Gratis (14 Días)</span>
+              <span>Crear mi Tienda Gratis (7 Días)</span>
               <ArrowRight size={18} />
             </Link>
 

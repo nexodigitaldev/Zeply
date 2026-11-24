@@ -92,7 +92,7 @@ export default function CtaSection() {
               marginBottom: '36px',
             }}
           >
-            Únete a más de 1,850 marcas en Colombia y Latinoamérica que automatizaron sus pedidos de WhatsApp con Zeply. Prueba 14 días sin costo.
+            Únete a más de 1,850 marcas en Colombia y Latinoamérica que automatizaron sus pedidos de WhatsApp con Zeply. Prueba 7 días sin costo.
           </p>
 
           <div
@@ -160,7 +160,7 @@ export default function CtaSection() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <CheckCircle2 size={16} color="#2dd4bf" />
-              <span>14 días de prueba completa</span>
+              <span>7 días de prueba completa</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <CheckCircle2 size={16} color="#2dd4bf" />

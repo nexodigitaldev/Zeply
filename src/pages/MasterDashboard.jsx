@@ -38,7 +38,7 @@ const PLANS_BENEFITS = {
     tag: 'PARA NUEVOS NEGOCIOS',
     color: '#0284c7',
     features: [
-      { text: 'Hasta 50 productos en inventario', included: true },
+      { text: 'Hasta 30 productos en inventario', included: true },
       { text: 'Tienda online oficial con subdominio Zeply', included: true },
       { text: 'Ventas y pedidos directos a WhatsApp', included: true },
       { text: 'Catálogo digital PDF estándar (hasta 5 págs descargable)', included: true },
@@ -57,10 +57,10 @@ const PLANS_BENEFITS = {
     tag: 'MÁS POPULAR',
     color: '#16a34a',
     features: [
-      { text: 'Hasta 250 productos y catálogo amplio', included: true },
+      { text: 'Hasta 100 productos en catálogo', included: true },
       { text: 'Tienda online completa con banners y carrusel', included: true },
       { text: 'Ventas y pedidos directos a WhatsApp automáticos', included: true },
-      { text: 'Revista Digital Interactiva HD (Lookbook con enlaces directos a WhatsApp)', included: true },
+      { text: 'Revista Digital Interactiva estilo catálogo Avon/Ésika', included: true },
       { text: 'Variaciones completas (tallas, colores, stock)', included: true },
       { text: 'Métricas de pedidos y clientes', included: true },
       { text: 'Soporte prioritario por WhatsApp', included: true },
@@ -76,7 +76,7 @@ const PLANS_BENEFITS = {
     tag: 'POTENCIA TOTAL & PAGOS ONLINE',
     color: '#7c3aed',
     features: [
-      { text: 'Productos y almacenamiento ILIMITADOS', included: true },
+      { text: 'Más de 200 productos en catálogo', included: true },
       { text: 'Pasarela de Pagos Online Integrada (Wompi, Tarjetas de Crédito, PSE, Nequi)', included: true },
       { text: 'Ventas directas a WhatsApp automatizadas', included: true },
       { text: 'Revista Digital Interactiva HD Premium ilimitada', included: true },
@@ -1895,7 +1895,7 @@ export default function MasterDashboard() {
                     <option value="BASIC">Básico ($29.900 COP)</option>
                     <option value="STARTER">Starter ($49.900 COP)</option>
                     <option value="PRO">Pro ($89.900 COP)</option>
-                    <option value="FREE_TRIAL">Prueba Gratuita (15 días)</option>
+                    <option value="FREE_TRIAL">Prueba Gratuita (7 días)</option>
                   </select>
                 </div>
               </div>
